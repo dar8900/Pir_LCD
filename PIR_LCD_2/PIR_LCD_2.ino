@@ -61,17 +61,23 @@ typedef enum
   
 }EEPROM_ITEM_ENUM;
 
+enum
+{
+  ON = 0,
+  OFF
+};
+
 EEPROM_ITEM EepromTab[] = 
 {
   {MIN_LIGHT_DELAY,  START_DELAY_ADDR, 1,  "Light delay", CHANGE_VALUE},
-  {1       ,  START_SWITCH_PIR_ADDR  , 1,  "PIR state"  , SWITCH_STATE},
+  {OFF     ,  START_SWITCH_PIR_ADDR  , 1,  "PIR state"  , SWITCH_STATE},
 };
 
 
-extern int numReg;
+//int numReg;
 
-int DelayAmount = MIN_LIGHT_DELAY;
-int SwitchPIR = 0;
+//int DelayAmount = MIN_LIGHT_DELAY;
+//int SwitchPIR = 0;
 int FlagBacklight = 0;
 int SetupOk = 0;
 int FlagSetup = 0;
@@ -268,7 +274,9 @@ bool SwichState()
   
   int buttonUp = 0, buttonDown = 0;
   bool OkButton = false;
-  int SwitchOnOff = SwitchPIR;
+  ReadMemory(EepromTab[PIR_STATE].eeprom_par_value, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
+  int OldSwitch = EepromTab[PIR_STATE].eeprom_par_value;
+  int SwitchOnOff = EepromTab[PIR_STATE].eeprom_par_value;
 
   // Pulire LCD
   ClearLCD();
@@ -289,7 +297,7 @@ bool SwichState()
     buttonUp = digitalRead(BUTTON_UP);
     buttonDown = digitalRead(BUTTON_DOWN);
     SetupOk = digitalRead(BUTTON_SETUP);
-    delay(50);
+    delay(60);
     // Pulire LCD
     LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
     LCDPrintString(1,CENTER_ALIGN,"to change the state");
@@ -321,10 +329,9 @@ bool SwichState()
       LCDPrintString(1, CENTER_ALIGN, "The state is");
       LCDPrintString(2, CENTER_ALIGN, OnOff[SwitchOnOff]);
       
-      if(SwitchOnOff != SwitchPIR)
+      if(SwitchOnOff != OldSwitch)
       {
-        SwitchPIR = SwitchOnOff;
-        WriteMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_value);
+        WriteMemory(EepromTab[PIR_STATE].eeprom_par_addr, SwitchOnOff);
       }
       
       OkButton = true;       
@@ -350,7 +357,11 @@ bool ChangeValue()
 {
   int buttonUp = 0, buttonDown = 0;
   bool OkButton = false;
-  int oldDelayAmount = DelayAmount;
+  //ReadMemory(NUM_REG_ADDR, 1, &EepromTab[DELAY_AMOUNT].eeprom_par_numReg);
+  ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
+  Serial.println(EepromTab[DELAY_AMOUNT].eeprom_par_numReg);
+  int oldDelayAmount = EepromTab[DELAY_AMOUNT].eeprom_par_value;
+  int ChangeDelayAmount = EepromTab[DELAY_AMOUNT].eeprom_par_value;
 
   // Pulire LCD
   ClearLCD();
@@ -370,12 +381,12 @@ bool ChangeValue()
     buttonUp = digitalRead(BUTTON_UP);
     buttonDown = digitalRead(BUTTON_DOWN);
     SetupOk = digitalRead(BUTTON_SETUP);
-    delay(50);
+    delay(60);
     // Pulire LCD
     LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
     LCDPrintString(1,CENTER_ALIGN,"to change the value:");
     LCDPrintLineVoid(2);
-    LCDPrintValue(2,8, DelayAmount);
+    LCDPrintValue(2,8, ChangeDelayAmount);
     LCDPrintString(2,11,"sec");
     LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
     // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di 
@@ -384,23 +395,23 @@ bool ChangeValue()
     if(buttonUp == HIGH)
     {
       BlinkLed(YELLOW_LED); // blink giallo
-      if(DelayAmount == 0)
+      if(ChangeDelayAmount == 0)
       {
-        DelayAmount == MIN_LIGHT_DELAY;
+        ChangeDelayAmount == MIN_LIGHT_DELAY;
       }
-      DelayAmount++;
-      if(DelayAmount > MAX_LIGHT_DELAY) // Raggiunti i secondi massimi per il delay nella gestione pir
+      ChangeDelayAmount++;
+      if(ChangeDelayAmount > MAX_LIGHT_DELAY) // Raggiunti i secondi massimi per il delay nella gestione pir
       {
-        DelayAmount = MIN_LIGHT_DELAY;
+        ChangeDelayAmount = MIN_LIGHT_DELAY;
       }
     }
     if(buttonDown == HIGH)
     {
       BlinkLed(YELLOW_LED); // blink giallo
-      DelayAmount--;
-      if(DelayAmount < MIN_LIGHT_DELAY) // Raggiunti i secondi minimi per il delay nella gestione pir
+      ChangeDelayAmount--;
+      if(ChangeDelayAmount < MIN_LIGHT_DELAY) // Raggiunti i secondi minimi per il delay nella gestione pir
       {
-        DelayAmount = MAX_LIGHT_DELAY;
+        ChangeDelayAmount = MAX_LIGHT_DELAY;
       }
     }
     if(SetupOk == HIGH)
@@ -409,10 +420,12 @@ bool ChangeValue()
 
       // Scrivere su LCD "Valori salvati"
       ClearLCD();
-      if(oldDelayAmount != DelayAmount)
+      if(oldDelayAmount != ChangeDelayAmount)
       {
         LCDPrintString(1,CENTER_ALIGN,"Value Saved!");
-        WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_value);         
+        EepromTab[DELAY_AMOUNT].eeprom_par_numReg = WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, ChangeDelayAmount);
+        WriteMemory(NUM_REG_ADDR, EepromTab[DELAY_AMOUNT].eeprom_par_numReg);
+        Serial.println(EepromTab[DELAY_AMOUNT].eeprom_par_numReg);         
       }
       else
       {
@@ -441,7 +454,6 @@ bool InfoScroll()
   int AutoScrollTimer = 200; // DA CONTROLLARE #define AUTOSCROLL_TIMER  100
   int Page = MIN_INFO_PAGES;
   String tmpEepromValue;
-  
   OFF(RED_LED);
   ON(GREEN_LED);
   ON(BLUE_LED);
@@ -464,6 +476,13 @@ bool InfoScroll()
     buttonDown = digitalRead(BUTTON_DOWN);
     ExitButton = digitalRead(BUTTON_SETUP);
     delay(100);
+    if(Page == DELAY_AMOUNT)
+    {
+      ReadMemory(NUM_REG_ADDR, 1, &EepromTab[Page].eeprom_par_numReg);
+      Serial.println(EepromTab[Page].eeprom_par_numReg);
+    }
+    ReadMemory(EepromTab[Page].eeprom_par_addr, EepromTab[Page].eeprom_par_numReg, &EepromTab[Page].eeprom_par_value);
+    
 //    if(AutoScrollTimer == 0)
 //    {
 //      delay(1000);
@@ -501,7 +520,6 @@ bool InfoScroll()
       {
         Page = MIN_INFO_PAGES;
       }
-      Serial.println("UP!");
     }
     if(buttonDown == HIGH)
     {
@@ -512,7 +530,6 @@ bool InfoScroll()
       {
         Page = MAX_INFO_PAGES-1;
       }
-      Serial.println("DOWN!");
     }
     if(ExitButton == HIGH)
     {
@@ -567,9 +584,9 @@ void WriteHomeMsg()
 {
   if(FlagBacklight)
   {
-    LCDPrintString(0,CENTER_ALIGN,"Press on Enter/Ok");
-    LCDPrintString(1,CENTER_ALIGN,"for enter in");
-    LCDPrintString(2,CENTER_ALIGN,"Main Setup");
+    LCDPrintString(1,CENTER_ALIGN,"Press on Enter/Ok");
+    LCDPrintString(2,CENTER_ALIGN,"for enter in");
+    LCDPrintString(3,CENTER_ALIGN,"Main Setup");
     delay(2000); 
     ClearLCD(); 
     LCDPrintString(1,CENTER_ALIGN,"After the display");
@@ -602,9 +619,9 @@ void gestionePIR(int analogPin)
     FlagBacklight = true;
     ON(GREEN_LED); 
     OFF(RED_LED);
-    ReadMemory(NUM_REG_ADDR , 1, &numReg);
-    ReadMemory(START_DELAY_ADDR, numReg, &DelayAmount);
-    LcdTimeWrite(DelayAmount);
+    ReadMemory(NUM_REG_ADDR , 1, &EepromTab[DELAY_AMOUNT].eeprom_par_numReg);
+    ReadMemory(START_DELAY_ADDR, EepromTab[DELAY_AMOUNT].eeprom_par_numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
+    LcdTimeWrite(EepromTab[DELAY_AMOUNT].eeprom_par_value);
   }
   else
   {
@@ -638,9 +655,9 @@ void setup()
   delay(1000);
   lcd_main.noBlink(); 
 
-  ReadMemory(NUM_REG_ADDR, 1, &numReg);
-  ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
-  ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, 1, &EepromTab[PIR_STATE].eeprom_par_value);
+  //ReadMemory(NUM_REG_ADDR, 1, &EepromTab[DELAY_AMOUNT].eeprom_par_numReg); // Inizializzo il numero registri per il delay
+  ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
+  ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
   
   lcd_main.backlight();
   FlagBacklight = true;
@@ -648,7 +665,7 @@ void setup()
 
   InfoScroll();
   
-  delay(3000);
+  delay(1000);
 
   
   ClearLCD(); 
@@ -663,7 +680,7 @@ void loop()
   }
   else
   {
-  if(SwitchPIR == 0)
+  if(EepromTab[PIR_STATE].eeprom_par_value == ON)
   {
     digitalWrite(PIR_SWITCH, HIGH);
     gestionePIR(AnalogPirPin);

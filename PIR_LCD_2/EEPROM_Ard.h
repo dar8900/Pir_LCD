@@ -6,7 +6,7 @@
 #define FLAG_VALUE_ADDR 50
 #define NUM_REG_ADDR    51
 
-extern int FlagValueBig;
+//extern int FlagValueBig;
 
 int WriteMemory(int address, int value);
 int ReadMemory(int address, int numReg, int *value);

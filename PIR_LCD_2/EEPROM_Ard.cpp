@@ -9,8 +9,8 @@ resto = 163
 
 */
 
-int FlagValueBig = 0;
-int numReg;
+static int FlagValueBig = 0;
+
 
 int WriteMemory(int address, int value)
 {
@@ -82,10 +82,11 @@ int WriteMemory(int address, int value)
     numReg = 0;
   }
 
-  if(address == START_DELAY_ADDR)
-  {
-    EEPROM.write(NUM_REG_ADDR, numReg);
-  }
+//  if(address == START_DELAY_ADDR)
+//  {
+//    EEPROM.write(NUM_REG_ADDR, numReg);
+//    
+//  }
   
   return  numReg;
 }
@@ -98,9 +99,9 @@ int ReadMemory(int address, int numReg, int *value)
   
   if(!FlagValueBig)
   {
-    ValueRead = EEPROM.read(address);
-    ReadOk = 1;
-  }
+     ValueRead = EEPROM.read(address);
+     ReadOk = 1;      
+   }
   else
   {
     for(int idx = 0; idx < numReg; idx++)
