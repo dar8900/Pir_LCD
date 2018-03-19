@@ -8,6 +8,13 @@ LiquidCrystal_I2C lcd_main(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
 #define MAX_LIGHT_DELAY   600 // In secondi
 #define MIN_LIGHT_DELAY    20 // In secondi
 
+#define MIN_MENU_PAGES   1
+#define MAX_MENU_PAGES  sizeof(MainSetupItems)/sizeof(CREATE_MENU)
+
+
+#define MIN_INFO_PAGES  1
+#define MAX_INFO_PAGES  sizeof(EepromTab)/sizeof(EEPROM_ITEM)
+
 #define MAX_LCD_ROW    3
 #define MAX_LCD_COL   19
 
@@ -19,6 +26,50 @@ LiquidCrystal_I2C lcd_main(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
 #define  ON(pin)   digitalWrite(pin, HIGH)
 
 #define AnalogPirPin  0
+
+typedef enum
+{
+  CHANGE_VALUE = 0,   // menu dove cambi solo un valore numerico
+  SWITCH_STATE,   // menu dove viene gestito solo lo switch on off per uscite digitali
+  INFO        // menu a scorrimento automatico con tutte le info salvate in eeprom
+} MENU_TYPE_NBR;
+
+
+typedef struct
+{
+  String nameMenu;
+  MENU_TYPE_NBR typeMenu;
+  bool (*MenuFunc)(void);
+} CREATE_MENU;
+
+MENU_TYPE_NBR MainSetupItems[] = 
+{
+  {"Change light delay", CHANGE_VALUE , ChangeValue},
+  {"Change PIR state"  , SWITCH_STATE , SwichState },
+  {"Show Info"         , INFO         , InfoScroll },
+};
+
+typedef struct
+{
+  int eeprom_par_value;
+  int eeprom_par_addr;
+  int eeprom_par_numReg;
+  String  eeprom_par_name;
+} EEPROM_ITEM;
+
+typedef enum
+{
+  DELAY_AMOUNT = 0,
+  PIR_SWITCH
+  
+}EEPROM_ITEM_ENUM;
+
+EEPROM_ITEM EepromTab[] = 
+{
+  {MINIMO_DEALY,  START_DELAY_ADDR, 1,  "Light delay"},
+  {0       ,  START_PIR_ADDR  , 1,  "PIR state"  },
+};
+
 
 extern int numReg;
 
@@ -39,26 +90,6 @@ enum
   BLUE_LED,
   YELLOW_LED,
   PIR_SWITCH
-};
-
-typedef struct
-{
-  int numMenu;
-  String nomeMenu;
-  
-}SETUP_T;
-
-enum
-{
-  DELAY_MENU,
-  SWITCH_PIR_MENU
-};
-
-const SETUP_T SetupVoices [] =
-{
-  {DELAY_MENU, "Delay Setup"},
-  {SWITCH_PIR_MENU, "Switch PIR Setup"}
-  
 };
 
 const String OnOff[2] = {"On", "Off"};
@@ -267,89 +298,68 @@ void SetupDelayInit()
 
 void MainSetup()
 {
-  int buttonUp = 0, buttonDown = 0;
-  bool ExitMainSetup = false;
-  int MenuIdx  = 0;
+  int buttonUp = LOW, buttonDown = LOW;
+  int OkButton = LOW; //  Resetto ExitButton
+  bool ExitSetup = false;
+  int Page = MIN_MENU_PAGES;
   
-  ON(RED_LED);
-  ON(GREEN_LED);
+  OFF(RED_LED);
+  OFF(GREEN_LED);
   ON(BLUE_LED);
-
-  lcd_main.backlight();
+  lcd_main.blink();
+  
   FlagBacklight = true;
+
   // Pulire LCD
   ClearLCD();
   LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-  LCDPrintString(1,CENTER_ALIGN,"to select ");
-  LCDPrintString(2,CENTER_ALIGN,"the Setup");
-  LCDPrintString(3, CENTER_ALIGN, "Press Ok to confirm");
-  //  Resetto SetupOk
-  SetupOk = LOW;
+  LCDPrintString(1,CENTER_ALIGN,"to scroll the menù");
+  LCDPrintString(3,CENTER_ALIGN,"Press Ok to enter");
   
   delay(2000);
-  // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di 
-  // premere su setup per dare l'ok
-  ClearLCD();
+  
   while(1)
   {
-  buttonUp = digitalRead(BUTTON_UP);
-  buttonDown = digitalRead(BUTTON_DOWN);
-  SetupOk = digitalRead(BUTTON_SETUP);
-  delay(50);
-  ClearLCD();
-  LCDPrintString(2, CENTER_ALIGN, SetupVoices[MenuIdx].nomeMenu);
-  if(buttonUp == HIGH)
-  {
-    BlinkLed(YELLOW_LED); // blink giallo
-    MenuIdx++;
-    if(MenuIdx > SWITCH_PIR_MENU) // Se supera la voce 1
+    buttonUp = digitalRead(BUTTON_UP);
+    buttonDown = digitalRead(BUTTON_DOWN);
+    OkButton = digitalRead(BUTTON_SETUP);
+    // Pulire LCD
+    ClearLCD();
+    LCDPrintString(2, CENTER_ALIGN, MainSetupItems[Page].nameMenu);
+    
+    if(buttonUp == HIGH)
     {
-     MenuIdx = DELAY_MENU;
+      BlinkLed(YELLOW_LED); // blink giallo
+      Page++;
+      if(Page > MAX_MENU_PAGES) 
+      {
+        Page = MIN_MENU_PAGES;
+      }
     }
-  }
-  if(buttonDown == HIGH)
-  {
-    BlinkLed(YELLOW_LED); // blink giallo
-    MenuIdx--;
-    if(MenuIdx < DELAY_MENU) // Se supera la voce 0
+    if(buttonDown == HIGH)
     {
-     MenuIdx = SWITCH_PIR_MENU;
+      BlinkLed(YELLOW_LED); // blink giallo
+      Page--;
+      if(Page < MIN_MENU_PAGES)
+      {
+        Page = MAX_MENU_PAGES;
+      }
     }
-  }
-  if(SetupOk == HIGH)
-  {
-    BlinkLed(YELLOW_LED); // blink giallo
-    if(SetupVoices[MenuIdx].numMenu == DELAY_MENU)
+    if(OkButton == HIGH)
     {
-      ExitMainSetup = SetupDelay();
+      BlinkLed(YELLOW_LED); // blink giallo
+      ExitSetup = MainSetupItems[Page].MenuFunc();      
     }
-    else if(SetupVoices[MenuIdx].numMenu == SWITCH_PIR_MENU)
+    
+    if(ExitSetup)
     {
-      ExitMainSetup = SwitchPirSetup();
-    }
-    else
-    {
-      ClearLCD();
-      LCDPrintString(1,CENTER_ALIGN, "Something Wrong!");
+      OFF(BLUE_LED);
       break;
     }
-    // Scrivere su LCD "Valori salvati"
-    ClearLCD();
-      
   }
-  if(ExitMainSetup)
-  {
-    ClearLCD();
-  OFF(RED_LED);
-  OFF(GREEN_LED);
-    OFF(BLUE_LED);
-    break;
-  }
-  }
-
 }
 
-bool SwitchPirSetup()
+bool SwichState()
 {
   
   int buttonUp = 0, buttonDown = 0;
@@ -359,7 +369,7 @@ bool SwitchPirSetup()
   // Pulire LCD
   ClearLCD();
   LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-  LCDPrintString(1,CENTER_ALIGN,"to switch the PIR");
+  LCDPrintString(1,CENTER_ALIGN,"to change the state");
   LCDPrintString(2,CENTER_ALIGN,"On or Off");
   LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
 
@@ -378,7 +388,7 @@ bool SwitchPirSetup()
     delay(50);
     // Pulire LCD
     LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-    LCDPrintString(1,CENTER_ALIGN,"to switch the PIR");
+    LCDPrintString(1,CENTER_ALIGN,"to change the state");
     LCDPrintLineVoid(2);
     LCDPrintString(2, CENTER_ALIGN, OnOff[SwitchOnOff]);
     LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
@@ -404,7 +414,7 @@ bool SwitchPirSetup()
       BlinkLed(YELLOW_LED); // blink giallo
       // Scrivere su LCD "Valori salvati"
       ClearLCD();
-      LCDPrintString(1, CENTER_ALIGN, "The PIR is");
+      LCDPrintString(1, CENTER_ALIGN, "The state is");
       LCDPrintString(2, CENTER_ALIGN, OnOff[SwitchOnOff]);
       
       if(SwitchOnOff != SwitchPIR)
@@ -432,7 +442,7 @@ bool SwitchPirSetup()
 
 
 
-bool SetupDelay()
+bool ChangeValue()
 {
   int buttonUp = 0, buttonDown = 0;
   bool OkButton = false;
@@ -441,7 +451,7 @@ bool SetupDelay()
   // Pulire LCD
   ClearLCD();
   LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-  LCDPrintString(1,CENTER_ALIGN,"to change the delay");
+  LCDPrintString(1,CENTER_ALIGN,"to change the value");
   LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
 
   //  Resetto SetupOk
@@ -459,7 +469,7 @@ bool SetupDelay()
     delay(50);
     // Pulire LCD
     LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-    LCDPrintString(1,CENTER_ALIGN,"to change the delay:");
+    LCDPrintString(1,CENTER_ALIGN,"to change the value:");
     LCDPrintLineVoid(2);
     LCDPrintValue(2,8, DelayAmount);
     LCDPrintString(2,11,"sec");
@@ -519,6 +529,91 @@ bool SetupDelay()
   return OkButton;
 }
 
+bool InfoScroll()
+{
+  int buttonUp = LOW, buttonDown = LOW;
+  int ExitButton = LOW; //  Resetto ExitButton
+  bool ExitInfo = false;
+  int AutoScrollTimer = AUTOSCROLL_TIMER; // DA CONTROLLARE #define AUTOSCROLL_TIMER  100
+  int Page = MIN_INFO_PAGES;
+  
+  OFF(RED_LED);
+  ON(GREEN_LED);
+  ON(BLUE_LED);
+  lcd_main.blink();
+  
+  FlagBacklight = true;
+
+  // Pulire LCD
+  ClearLCD();
+  LCDPrintString(0,CENTER_ALIGN,"Press Up, Down");
+  LCDPrintString(0,CENTER_ALIGN,"or nothing");
+  LCDPrintString(2,CENTER_ALIGN,"to scroll the info");
+  LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
+  
+  delay(2000);
+  
+  while(1)
+  {
+    buttonUp = digitalRead(BUTTON_UP);
+    buttonDown = digitalRead(BUTTON_DOWN);
+    ExitButton = digitalRead(BUTTON_SETUP);
+    
+    if(AutoScrollTimer == 0)
+    {
+      delay(1000);
+      Page++;
+      if(Page > MAX_INFO_PAGES) 
+      {
+        Page = MIN_INFO_PAGES;
+      }
+    }
+    
+    // Pulire LCD
+    ClearLCD();
+    LCDPrintString(1, CENTER_ALIGN, EepromTab[Page].eeprom_par_name);
+    LCDPrintString(2, CENTER_ALIGN, EepromTab[Page].eeprom_par_value);
+    
+    if(buttonUp == HIGH)
+    {
+      BlinkLed(YELLOW_LED); // blink giallo
+      AutoScrollTimer = AUTOSCROLL_TIMER;
+      Page++;
+      if(Page > MAX_INFO_PAGES) 
+      {
+        Page = MIN_INFO_PAGES;
+      }
+    }
+    if(buttonDown == HIGH)
+    {
+      BlinkLed(YELLOW_LED); // blink giallo
+      AutoScrollTimer = AUTOSCROLL_TIMER;
+      Page--;
+      if(Page < MIN_INFO_PAGES) 
+      {
+        Page = MAX_INFO_PAGES;
+      }
+    }
+    if(ExitButton == HIGH)
+    {
+      BlinkLed(YELLOW_LED); // blink giallo
+      // Scrivere su LCD Valori salvati
+      ClearLCD();
+      LCDPrintString(1, CENTER_ALIGN, "Exit...");
+      delay(2000);
+      ExitInfo = true;
+    }
+    
+    if(ExitInfo)
+    {
+      OFF(GREEN_LED);
+      OFF(BLUE_LED);
+      break;
+    }
+    AutoScrollTimer--;
+  }
+  return ExitInfo;
+}
 bool EnterSetupButton()
 {
   SetupOk = digitalRead(BUTTON_SETUP);

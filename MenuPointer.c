@@ -63,7 +63,7 @@ bool InfoScroll()
 	ON(BLUE_LED);
 	lcd_main.blink();
 	
-	// ATTIVARE FLAG RETROILLUMINAZIONE !!!! /*************************************/
+	FlagBacklight = true;
 
 	// Pulire LCD
 	ClearLCD();
@@ -148,7 +148,7 @@ void MainSetup()
 	ON(BLUE_LED);
 	lcd_main.blink();
 	
-	// ATTIVARE FLAG RETROILLUMINAZIONE !!!! /*************************************/
+	FlagBacklight = true;
 
 	// Pulire LCD
 	ClearLCD();
