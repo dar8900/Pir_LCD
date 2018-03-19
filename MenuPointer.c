@@ -3,7 +3,7 @@
 
 
 #define MIN_INFO_PAGES 	1
-#define MAX_INFO_PAGES  sizeof(TotEepromItem)/sizeof(EEPROM_ITEM)
+#define MAX_INFO_PAGES  sizeof(EepromTab)/sizeof(EEPROM_ITEM)
 
 typedef enum
 {
@@ -22,9 +22,9 @@ typedef struct
 
 MENU_TYPE_NBR MainSetupItems[] = 
 {
-	{"Change light delay", CHANGE_VALUE, ChangeValue},
-	{"Change PIR state", SWITCH_STATE, SwichState},
-	{"Show Info", INFO, InfoScroll},
+	{"Change light delay", CHANGE_VALUE	, ChangeValue},
+	{"Change PIR state"  , SWITCH_STATE	, SwichState },
+	{"Show Info"		 , INFO			, InfoScroll },
 };
 
 typedef struct
@@ -35,17 +35,19 @@ typedef struct
 	String 	eeprom_par_name;
 } EEPROM_ITEM;
 
-EEPROM_ITEM DelayAmount;
-EEPROM_ITEM PirSwitch;
+typedef enum
+{
+	DELAY_AMOUNT = 0,
+	PIR_SWITCH
+	
+}EEPROM_ITEM_ENUM;
 
 EEPROM_ITEM EepromTab[] = 
 {
-	DelayAmount,
-	PirSwitch,
+	{MINIMO_DEALY, 	START_DELAY_ADDR,	1,	"Light delay"},
+	{0			 , 	START_PIR_ADDR	,	1,	"PIR state"  },
 };
 
-DelayAmount.eeprom_par_name = "Light delay";
-PirSwitch.eeprom_par_name = "PIR state";
 
 
 bool InfoScroll()
@@ -65,8 +67,9 @@ bool InfoScroll()
 
 	// Pulire LCD
 	ClearLCD();
-	LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-	LCDPrintString(1,CENTER_ALIGN,"to scroll the info");
+	LCDPrintString(0,CENTER_ALIGN,"Press Up, Down");
+	LCDPrintString(0,CENTER_ALIGN,"or nothing");
+	LCDPrintString(2,CENTER_ALIGN,"to scroll the info");
 	LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
 	
 	delay(2000);
@@ -79,8 +82,9 @@ bool InfoScroll()
 		
 		if(AutoScrollTimer == 0)
 		{
+			delay(1000);
 			Page++;
-			if(Page > MAX_INFO_PAGES) // DEFINIRE I MAX INFO PAGES
+			if(Page > MAX_INFO_PAGES) 
 			{
 				Page = MIN_INFO_PAGES;
 			}
