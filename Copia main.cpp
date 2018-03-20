@@ -508,6 +508,7 @@ bool InfoScroll()
     else
     {
       tmpEepromValue = String(EepromTab[Page].eeprom_par_value);
+	  tmpEepromValue = String(tmpEepromValue + "sec");
       LCDPrintString(2, CENTER_ALIGN, tmpEepromValue);
     }
      
@@ -683,6 +684,7 @@ void loop()
   if(EepromTab[PIR_STATE].eeprom_par_value == ON)
   {
     digitalWrite(PIR_SWITCH, HIGH);
+	delay(150);
     gestionePIR(AnalogPirPin);
   }
   else

@@ -9,11 +9,10 @@ resto = 163
 
 */
 
-static int FlagValueBig = 0;
-
 
 int WriteMemory(int address, int value)
 {
+  int FlagValueBig = 0;
   int numReg;
   int resto = value % 255;
 
@@ -91,24 +90,25 @@ int WriteMemory(int address, int value)
   return  numReg;
 }
 
-int ReadMemory(int address, int numReg, int *value)
+bool ReadMemory(int address, int numReg, int *value)
 {
   int ValueRead;
-  byte ReadOk = 0;
+  int FlagValueBig = 0;
+  bool ReadOk = false;
   FlagValueBig = EEPROM.read(FLAG_VALUE_ADDR);
   
   if(!FlagValueBig)
   {
      ValueRead = EEPROM.read(address);
-     ReadOk = 1;      
-   }
+     ReadOk = true;      
+  }
   else
   {
     for(int idx = 0; idx < numReg; idx++)
     {
       ValueRead += EEPROM.read(address + idx);      
     }
-    ReadOk = 1;
+    ReadOk = true;
   }
   if(ReadOk)
   {
