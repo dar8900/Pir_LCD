@@ -81,7 +81,7 @@ EEPROM_ITEM EepromTab[] =
 int FlagBacklight = 0;
 int SetupOk = 0;
 int FlagSetup = 0;
-
+int FlagShowInfo = 0;
 
 enum
 {
@@ -92,7 +92,8 @@ enum
   GREEN_LED,
   BLUE_LED,
   YELLOW_LED,
-  PIR_SWITCH
+  PIR_SWITCH,
+  LIGHT_SWITCH
 };
 
 bool ChangeValue();
@@ -583,7 +584,7 @@ void InterruptFunc()
 
 void WriteHomeMsg()
 {
-  if(FlagBacklight)
+  if(FlagBacklight && !FlagShowInfo)
   {
     LCDPrintString(1,CENTER_ALIGN,"Press on Enter/Ok");
     LCDPrintString(2,CENTER_ALIGN,"for enter in");
@@ -596,14 +597,19 @@ void WriteHomeMsg()
     EnterSetupButton();           
     FlagBacklight = false;
     lcd_main.noBacklight(); 
-  ClearLCD();
+    ClearLCD();
+  }
+  else if(FlagBacklight && FlagShowInfo)
+  {
+	FlagShowInfo = 0;
+	EnterSetupButton();           
+    FlagBacklight = false;
+    lcd_main.noBacklight(); 
+    ClearLCD();
   }
   else
   {
-    InterruptFunc();
-//    LCDPrintString(0,CENTER_ALIGN,"Press on Enter/Ok");
-//    LCDPrintString(1,CENTER_ALIGN,"for enter in");
-//    LCDPrintString(2,CENTER_ALIGN,"Delay Setup");    
+    InterruptFunc();    
   }
 
 }
@@ -622,14 +628,48 @@ void gestionePIR(int analogPin)
     OFF(RED_LED);
     ReadMemory(NUM_REG_ADDR , 1, &EepromTab[DELAY_AMOUNT].eeprom_par_numReg);
     ReadMemory(START_DELAY_ADDR, EepromTab[DELAY_AMOUNT].eeprom_par_numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
+	ON(LIGHT_SWITCH);
     LcdTimeWrite(EepromTab[DELAY_AMOUNT].eeprom_par_value);
+	OFF(LIGHT_SWITCH);
   }
   else
   {
     ON(RED_LED);
     OFF(GREEN_LED);
+	OFF(LIGHT_SWITCH);
   } 
 }
+
+void ShowInfoMsg()
+{
+	int InfoPressed = LOW;
+	int timer = 6; // 0.1s c.a (90ms)
+    while(timer > 0)
+    {
+		timer--;
+		InfoPressed = digitalRead(BUTTON_UP);
+		if(InfoPressed == HIGH)
+		{
+			InfoPressed = LOW;
+			FlagShowInfo = 1;
+			break;
+		}	
+		FlagShowInfo = 0;		
+		delay(15);
+	}	
+	if(FlagShowInfo)
+	{
+		lcd_main.backlight();
+		FlagBacklight = 1;
+		LCDPrintString(1, CENTER_ALIGN, "Press Setup/Ok");
+		LCDPrintString(2, CENTER_ALIGN, "for the menu");
+		delay(1000);
+	}
+	
+	
+}
+
+
 
 
 // Blink del led per 5ms
@@ -651,6 +691,7 @@ void setup()
   pinMode(BLUE_LED, OUTPUT);
   pinMode(YELLOW_LED, OUTPUT);
   pinMode(PIR_SWITCH, OUTPUT);
+  pinMode(LIGHT_SWITCH, OUTPUT);
   
   lcd_main.begin(20,4);  
   delay(1000);
@@ -660,14 +701,11 @@ void setup()
   ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
   ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
   
-  lcd_main.backlight();
-  FlagBacklight = true;
   ClearLCD();
 
   InfoScroll();
   
   delay(1000);
-
   
   ClearLCD(); 
 }
@@ -681,16 +719,16 @@ void loop()
   }
   else
   {
-  if(EepromTab[PIR_STATE].eeprom_par_value == ON)
-  {
-    digitalWrite(PIR_SWITCH, HIGH);
-  delay(150);
-    gestionePIR(AnalogPirPin);
-  }
-  else
-  {
-    digitalWrite(PIR_SWITCH, LOW);
-  }  
+	if(EepromTab[PIR_STATE].eeprom_par_value == ON)
+    {
+     	digitalWrite(PIR_SWITCH, HIGH);
+		delay(150);
+		gestionePIR(AnalogPirPin);
+    }
+    else
+    {
+		digitalWrite(PIR_SWITCH, LOW);
+    }  
   }
 }
 
