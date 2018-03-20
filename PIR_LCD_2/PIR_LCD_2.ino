@@ -643,7 +643,7 @@ void gestionePIR(int analogPin)
 void ShowInfoMsg()
 {
 	int InfoPressed = LOW;
-	int timer = 6; // 0.1s c.a (90ms)
+	int timer = 6; // 0.06s c.a (60ms)
     while(timer > 0)
     {
 		timer--;
@@ -655,7 +655,7 @@ void ShowInfoMsg()
 			break;
 		}	
 		FlagShowInfo = 0;		
-		delay(15);
+		delay(10);
 	}	
 	if(FlagShowInfo)
 	{
