@@ -1,4 +1,5 @@
 #include "EEPROM_Ard.h"
+#include "RTClib.h"
 
 #include <Wire.h>  // Libreria di sistema - E' richiesta da I2CIO.cpp
 #include <LiquidCrystal_I2C.h> // Libreria LCD I2C
@@ -61,14 +62,22 @@ typedef struct
 typedef enum
 {
   DELAY_AMOUNT = 0,
-  PIR_STATE
-  
+  PIR_STATE,
+  HOUR_BAND_1,
+  HOUR_BAND_2, 
+  MINUTE_BAND_1, 
+  MINUTE_BAND_2, 
+  DAY_BAND_1, 
+  DAY_BAND_2, 
+  MONTH_BAND_1, 
+  MONTH_BAND_2 
+ 
 }EEPROM_ITEM_ENUM;
 
 enum
 {
-  ON = 0,
-  OFF
+  TURN_ON = 0,
+  TURN_OFF
 };
 
 typedef struct
@@ -90,14 +99,6 @@ typedef struct
 	DATE_FOMAT BandDate;
 } TIME_BAND;
 
-//int numReg;
-
-//int DelayAmount = MIN_LIGHT_DELAY;
-//int SwitchPIR = 0;
-int FlagBacklight = 0;
-int SetupOk = 0;
-int FlagSetup = 0;
-int FlagShowInfo = 0;
 
 TIME_FOMAT PresentTime;  // Variabili per l'orario
 DATE_FOMAT PresentDate;  // Si perdono allo spegnimento ma vengono aggiornate subito all'accensione
@@ -118,6 +119,19 @@ enum
   LIGHT_SWITCH
 };
 
+//int numReg;
+
+RTC_DS1307 RTC;
+
+//int DelayAmount = MIN_LIGHT_DELAY;
+//int SwitchPIR = 0;
+int FlagBacklight = 0;
+int SetupOk = 0;
+int FlagSetup = 0;
+int FlagShowInfo = 0;
+bool FlagBandOk = false;
+bool FlagAllBandsInvalid = false;
+
 bool ChangeValue();
 bool SwichState();
 bool InfoScroll();
@@ -133,9 +147,16 @@ CREATE_MENU MainSetupItems[] =
 
 EEPROM_ITEM EepromTab[] = 
 {
-  {MIN_LIGHT_DELAY,  START_DELAY_ADDR, 1,  "Light delay", CHANGE_VALUE},
-  {OFF     ,  START_SWITCH_PIR_ADDR  , 1,  "PIR state"  , SWITCH_STATE},
-  {0       ,  0                      , 1,  "Time and Date", TIME_BAND_NUM},
+  {MIN_LIGHT_DELAY			,  START_DELAY_ADDR       , 1,  "Light delay"   , CHANGE_VALUE},
+  {OFF     					,  SWITCH_PIR_ADDR        , 1,  "PIR state"     , SWITCH_STATE},
+  {BAND_INVALID_VALUE       ,  HOUR_BAND_1_ADDR       , 1,  "Hour band 1"   , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  HOUR_BAND_2_ADDR       , 1,  "Hour band 2"   , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE       ,  MINUTE_BAND_1_ADDR     , 1,  "Minutes band 1", TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  MINUTE_BAND_2_ADDR     , 1,  "Minutes band 2", TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  DAY_BAND_1_ADDR        , 1,  "Day band 1"   , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  DAY_BAND_2_ADDR        , 1,  "Day band 2"   , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  MONTH_BAND_1_ADDR      , 1,  "Month band 1"   , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  MONTH_BAND_2_ADDR      , 1,  "Month band 2"   , TIME_BAND_NUM},
 };
 
 const String OnOff[2] = {"On", "Off"};
@@ -384,7 +405,8 @@ bool ChangeDateTime(TIME_BAND  Band)
       }
 	  else if(ChangedTime.hour != PresentTime.hour && ChangedTime.hour == BAND_INVALID_VALUE)
       {
-		LCDPrintString(1, CENTER_ALIGN, "Saved!");
+		LCDPrintString(0, CENTER_ALIGN, "Saved!");
+		LCDPrintString(1, CENTER_ALIGN, "Invalidated value");
 		LCDPrintString(2, CENTER_ALIGN, "This will turn OFF");
 		LCDPrintString(3, CENTER_ALIGN, "the sensor");
 		// scrivere il nuovo orario
@@ -450,7 +472,8 @@ bool ChangeDateTime(TIME_BAND  Band)
       }
 	  else if(ChangedTime.minute != PresentTime.minute && ChangedTime.minute == BAND_INVALID_VALUE)
       {
-		LCDPrintString(1, CENTER_ALIGN, "Saved!");
+		LCDPrintString(0, CENTER_ALIGN, "Saved!");
+		LCDPrintString(1, CENTER_ALIGN, "Invalidated value");
 		LCDPrintString(2, CENTER_ALIGN, "This will turn OFF");
 		LCDPrintString(3, CENTER_ALIGN, "the sensor");
 		// scrivere il nuovo orario
@@ -516,7 +539,8 @@ bool ChangeDateTime(TIME_BAND  Band)
       }
 	  else if(ChangedDate.day != PresentDate.day && ChangedDate.day == BAND_INVALID_VALUE)
       {
-		LCDPrintString(1, CENTER_ALIGN, "Saved!");
+		LCDPrintString(0, CENTER_ALIGN, "Saved!");
+		LCDPrintString(1, CENTER_ALIGN, "Invalidated value");
 		LCDPrintString(2, CENTER_ALIGN, "This will turn OFF");
 		LCDPrintString(3, CENTER_ALIGN, "the sensor");
 		// scrivere il nuovo orario
@@ -582,7 +606,8 @@ bool ChangeDateTime(TIME_BAND  Band)
       }
 	  else if(ChangedDate.month != PresentDate.month && ChangedDate.month == BAND_INVALID_VALUE)
       {
-		LCDPrintString(1, CENTER_ALIGN, "Saved!");
+		LCDPrintString(0, CENTER_ALIGN, "Saved!");
+		LCDPrintString(1, CENTER_ALIGN, "Invalidated value");
 		LCDPrintString(2, CENTER_ALIGN, "This will turn OFF");
 		LCDPrintString(3, CENTER_ALIGN, "the sensor");
 		// scrivere il nuovo orario
@@ -611,27 +636,86 @@ bool ChangeDateTime(TIME_BAND  Band)
 
 }
 
+void SaveBandToEeprom()
+{
+	WriteMemory(EepromTab[HOUR_BAND_1].eeprom_par_addr		, Band_1.BandTime.hour);
+	WriteMemory(EepromTab[HOUR_BAND_2].eeprom_par_addr		, Band_2.BandTime.hour);
+	WriteMemory(EepromTab[MINUTE_BAND_1].eeprom_par_addr	, Band_1.BandTime.minute);
+	WriteMemory(EepromTab[MINUTE_BAND_2].eeprom_par_addr 	, Band_2.BandTime.minute);
+	WriteMemory(EepromTab[DAY_BAND_1].eeprom_par_addr		, Band_1.BandDate.day);
+	WriteMemory(EepromTab[DAY_BAND_2].eeprom_par_addr		, Band_2.BandDate.day);
+	WriteMemory(EepromTab[MONTH_BAND_1].eeprom_par_addr		, Band_1.BandDate.month);
+	WriteMemory(EepromTab[MONTH_BAND_2].eeprom_par_addr		, Band_2.BandDate.month);	
+	return;
+}
+
+void ReadBandFromEeprom()
+{
+    ReadMemory(EepromTab[HOUR_BAND_1].eeprom_par_addr	, EepromTab[HOUR_BAND_1].eeprom_par_numReg	, &Band_1.BandTime.hour);
+	ReadMemory(EepromTab[HOUR_BAND_2].eeprom_par_addr	, EepromTab[HOUR_BAND_2].eeprom_par_numReg	, &Band_2.BandTime.hour);
+	ReadMemory(EepromTab[MINUTE_BAND_1].eeprom_par_addr , EepromTab[MINUTE_BAND_1].eeprom_par_numReg, &Band_1.BandTime.minute);
+	ReadMemory(EepromTab[MINUTE_BAND_2].eeprom_par_addr , EepromTab[MINUTE_BAND_2].eeprom_par_numReg, &Band_2.BandTime.minute);
+	ReadMemory(EepromTab[DAY_BAND_1].eeprom_par_addr	, EepromTab[DAY_BAND_1].eeprom_par_numReg	, &Band_1.BandDate.day);
+	ReadMemory(EepromTab[DAY_BAND_2].eeprom_par_addr	, EepromTab[DAY_BAND_2].eeprom_par_numReg	, &Band_2.BandDate.day);
+	ReadMemory(EepromTab[MONTH_BAND_1].eeprom_par_addr	, EepromTab[MONTH_BAND_1].eeprom_par_numReg	, &Band_1.BandDate.month);
+	ReadMemory(EepromTab[MONTH_BAND_2].eeprom_par_addr	, EepromTab[MONTH_BAND_2].eeprom_par_numReg	, &Band_2.BandDate.month);	
+	return;
+}
+
 bool ChangeTimeBands()
 {
 	ClearLCD();
 	lcd_main.backlight();
 	FlagBacklight = 1;
 	bool ExitChangeBand = false;
+	if(FlagAllBandsInvalid)
+	{
+		LCDPrintString(1, CENTER_ALIGN, "All band are");
+		LCDPrintString(2, CENTER_ALIGN, "INVALIDATED");
+		delay(2000);
+		ClearLCD();
+	}
 	while(!ExitChangeBand)
 	{
 		LCDPrintString(1, CENTER_ALIGN, "Change the");
 		LCDPrintString(2, CENTER_ALIGN, "first band");		
 		ExitChangeBand = ChangeDateTime(Band_1);
+		ClearLCD();
 	}
 	ExitChangeBand = false;
 	while(!ExitChangeBand)
 	{
-		LCDPrintString(1, CENTER_ALIGN, "Change the");
-		LCDPrintString(2, CENTER_ALIGN, "second band");		
+		LCDPrintString(0, CENTER_ALIGN, "Change the");
+		LCDPrintString(1, CENTER_ALIGN, "second band");	
+		LCDPrintString(2, CENTER_ALIGN, "Must be greater");
+		LCDPrintString(3, CENTER_ALIGN, "then the first!");
 		ExitChangeBand = ChangeDateTime(Band_2);
+		ClearLCD();
 	}	
+	// CONTROLLO CHE LA BANDA 2 SIA MAGGIORE DELLA BANDA 1
+	if((Band_1.BandTime.hour > Band_2.BandTime.hour) || 
+       (Band_1.BandDate.day  > Band_2.BandDate.day ) || 
+	   (Band_1.BandDate.month > Band_2.BandDate.month))
+    {
+		ClearLCD();
+		LCDPrintString(0, CENTER_ALIGN, "ERROR!");
+		LCDPrintString(1, CENTER_ALIGN, "Band 1 > Band 2");
+		LCDPrintString(2, CENTER_ALIGN, "Restore invalid");
+		LCDPrintString(2, CENTER_ALIGN, "band values");
+		SetBandInvalid();
+		delay(2000);
+		ClearLCD();
+	}
+	else
+	{
+		FlagAllBandsInvalid = false;
+		SaveBandToEeprom();		
+	}
+
 	return ExitChangeBand;
 }
+
+
 
 
 bool SwichState()
@@ -677,14 +761,14 @@ bool SwichState()
       BlinkLed(YELLOW_LED); // blink giallo
       SwitchOnOff++;
       if(SwitchOnOff > 1)
-        SwitchOnOff = 0;
+        SwitchOnOff = TURN_ON;
     }
     if(buttonDown == HIGH)
     {
       BlinkLed(YELLOW_LED); // blink giallo
       SwitchOnOff--;
       if(SwitchOnOff < 0)
-        SwitchOnOff = 1;
+        SwitchOnOff = TURN_OFF;
     }
     if(SetupOk == HIGH)
     {
@@ -811,12 +895,52 @@ bool ChangeValue()
   return OkButton;
 }
 
+
+void SetBandInvalid()
+{
+  Band_1.BandTime.hour = BAND_INVALID_VALUE;
+  Band_1.BandTime.minute = BAND_INVALID_VALUE;
+  Band_1.BandDate.day = BAND_INVALID_VALUE;
+  Band_1.BandDate.month = BAND_INVALID_VALUE;
+  Band_2.BandTime.hour = BAND_INVALID_VALUE;
+  Band_2.BandTime.minute = BAND_INVALID_VALUE;
+  Band_2.BandDate.day = BAND_INVALID_VALUE;
+  Band_2.BandDate.month = BAND_INVALID_VALUE;	
+  FlagAllBandsInvalid = true;
+}
+
+
+void ChekBandValue()
+{
+	bool InvalidBand = false;
+	
+	if(Band_1.BandTime.hour == BAND_INVALID_VALUE || Band_1.BandTime.minute == BAND_INVALID_VALUE || Band_1.BandDate.day == BAND_INVALID_VALUE ||  Band_1.BandDate.month== BAND_INVALID_VALUE ||
+	   Band_2.BandTime.hour == BAND_INVALID_VALUE || Band_2.BandTime.minute == BAND_INVALID_VALUE || Band_2.BandDate.day == BAND_INVALID_VALUE || Band_2.BandDate.month == BAND_INVALID_VALUE)
+	   {
+		   InvalidBand = true;
+		   FlagBandOk = false;
+		   SetBandInvalid();	   
+	   }
+	if(!InvalidBand)
+	{
+		if((PresentTime.hour >= Band_1.BandTime.hour && PresentTime.hour <= Band_2.BandTime.hour) && (PresentTime.minute >= Band_1.BandTime.minute && PresentTime.minute <= Band_2.BandTime.minute) &&
+		   (PresentDate.day >= Band_1.BandDate.day && PresentDate.day <= Band_2.BandDate.day) && (PresentDate.month >= Band_1.BandDate.month && PresentDate.month <= Band_2.BandDate.month))
+		{
+		   FlagBandOk = true;
+		}
+		else
+		{
+		   FlagBandOk = false;
+		}		
+	}
+}
+
+
 bool InfoScroll()
 {
   int buttonUp = LOW, buttonDown = LOW;
   int ExitButton = LOW; //  Resetto ExitButton
   bool ExitInfo = false;
-  int AutoScrollTimer = 200; // DA CONTROLLARE #define AUTOSCROLL_TIMER  100
   int Page = MIN_INFO_PAGES;
   String tmpEepromValue;
   String TimeStr, DateStr;
@@ -848,19 +972,7 @@ bool InfoScroll()
       Serial.println(EepromTab[Page].eeprom_par_numReg);
     }
     ReadMemory(EepromTab[Page].eeprom_par_addr, EepromTab[Page].eeprom_par_numReg, &EepromTab[Page].eeprom_par_value);
-    
-//    if(AutoScrollTimer == 0)
-//    {
-//      delay(1000);
-//      AutoScrollTimer = AUTOSCROLL_TIMER;
-//      Page++;
-//      Serial.println(MAX_INFO_PAGES);
-//      if(Page > MAX_INFO_PAGES) 
-//      {
-//        Page = MIN_INFO_PAGES;
-//      }
-//    }
-    
+   
     // Pulire LCD
     ClearLCD();
     LCDPrintString(0, CENTER_ALIGN, EepromTab[Page].eeprom_par_name);
@@ -888,7 +1000,6 @@ bool InfoScroll()
     if(buttonUp == HIGH)
     {
       BlinkLed(YELLOW_LED); // blink giallo
-      AutoScrollTimer = AUTOSCROLL_TIMER;
       Page++;
       if(Page >= MAX_INFO_PAGES) 
       {
@@ -898,7 +1009,6 @@ bool InfoScroll()
     if(buttonDown == HIGH)
     {
       BlinkLed(YELLOW_LED); // blink giallo
-      AutoScrollTimer = AUTOSCROLL_TIMER;
       Page--;
       if(Page < MIN_INFO_PAGES) 
       {
@@ -921,7 +1031,6 @@ bool InfoScroll()
       OFF(BLUE_LED);
       break;
     }
-    AutoScrollTimer--;
   }
   return ExitInfo;
 }
@@ -1067,6 +1176,7 @@ void BlinkLed(int pin)
 void setup()
 {
   Serial.begin(9600);
+  
   pinMode(BUTTON_UP, INPUT);
   pinMode(BUTTON_DOWN, INPUT);
   pinMode(BUTTON_SETUP, INPUT);
@@ -1076,6 +1186,21 @@ void setup()
   pinMode(YELLOW_LED, OUTPUT);
   pinMode(PIR_SWITCH, OUTPUT);
   pinMode(LIGHT_SWITCH, OUTPUT);
+
+
+  if (!RTC.begin()) 
+  {
+    Serial.println("Couldn't find RTC");
+    BlinkLed(YELLOW_LED);
+    while (1);
+  }
+  
+    if (!RTC.isrunning()) 
+	{
+		Serial.println("RTC is NOT running!");
+    // following line sets the RTC to the date & time this sketch was compiled
+		RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    }
   
   lcd_main.begin(20,4);  
   delay(1000);
@@ -1085,26 +1210,23 @@ void setup()
 	ANDREBBE SETTATO IL TEMPO E LA DATA CORRENTI NELLE VARIABILI GLOBALI
 	IN MODO CHE NON SI POSSA SUPERARE IL NUMERO DI GIORNI PER IL MESE CORRENTE
 	QUANDO USO LA FUNZIONE PER IL CAMBIAMENTO DI DATA
-	DateTime now = RTC.now();
-	PresentDate.day = now.day();
-	PresentDate.month = now.month();
-	PresentDate.year = now.year();
-	PresentTime.hour = now.hour();
-	PresentTime.minute = now.minute();
-  */
+	*/
+  
+  DateTime now = RTC.now();
+  PresentDate.day = now.day();
+  PresentDate.month = now.month();
+  PresentDate.year = now.year();
+  PresentTime.hour = now.hour();
+  PresentTime.minute = now.minute();
+ 
+  SetBandInvalid(); // NON QUESTO MA SETTARE LE VARIABILI GLOBALI BAND_1 BAND_2 LEGGENDO DALLA MEMORIA 
+  //ReadBandFromEeprom();
+  
   
   //ReadMemory(NUM_REG_ADDR, 1, &EepromTab[DELAY_AMOUNT].eeprom_par_numReg); // Inizializzo il numero registri per il delay
   ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
   ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
-  
-  Band_1.BandTime.hour = BAND_INVALID_VALUE;
-  Band_1.BandTime.minute = BAND_INVALID_VALUE;
-  Band_1.BandTime.day = BAND_INVALID_VALUE;
-  Band_1.BandTime.month = BAND_INVALID_VALUE;
-  Band_2.BandTime.hour = BAND_INVALID_VALUE;
-  Band_2.BandTime.minute = BAND_INVALID_VALUE;
-  Band_2.BandTime.day = BAND_INVALID_VALUE;
-  Band_2.BandTime.month = BAND_INVALID_VALUE;
+ 
   
   ClearLCD();
 
@@ -1133,17 +1255,23 @@ void loop()
   {
 	// INSERIRE BOOLEANO PER CHEK DEL BAND, NEL CASO FOSSE FALSE (OVVERO FUORI FASCIA O INVALIDO) 
 	// SPEGNERE IL SENSORE, ALTRIMENTI LASCIARE LA GESTIONE CHE C'è ORA
-	
-	if(EepromTab[PIR_STATE].eeprom_par_value == ON)
-    {
-     	digitalWrite(PIR_SWITCH, HIGH);
-		delay(150);
-		gestionePIR(AnalogPirPin);
-    }
-    else
-    {
-		digitalWrite(PIR_SWITCH, LOW);
-    }  
+	ChekBandValue();
+	if(FlagBandOk)
+	{
+		if(EepromTab[PIR_STATE].eeprom_par_value == TURN_ON)
+		{
+			ON(PIR_SWITCH);
+			delay(150);
+			gestionePIR(AnalogPirPin);
+		}
+		else
+		{
+			OFF(PIR_SWITCH);
+		}  		
+	}
+	else
+		OFF(PIR_SWITCH);
+
   }
 }
 
