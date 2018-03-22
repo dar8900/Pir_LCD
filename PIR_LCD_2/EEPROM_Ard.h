@@ -23,5 +23,7 @@
 
 int WriteMemory(short address, short value);
 bool ReadMemory(short address, short numReg, short *value);
+bool ClearMemory();
+bool IsMemoryEmpty();
 
 #endif

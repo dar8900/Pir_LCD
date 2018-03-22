@@ -61,7 +61,6 @@ bool ChangeValue()
   short numReg;
   ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg);
   ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
-  Serial.println(EepromTab[DELAY_AMOUNT].eeprom_par_numReg);
   short oldDelayAmount = EepromTab[DELAY_AMOUNT].eeprom_par_value;
   short ChangeDelayAmount = EepromTab[DELAY_AMOUNT].eeprom_par_value;
 
@@ -127,8 +126,7 @@ bool ChangeValue()
         LCDPrintString(1,CENTER_ALIGN,"Value Saved!");
         WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, ChangeDelayAmount);
 		ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg);
-		ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &ChangeDelayAmount);
-        Serial.println(ChangeDelayAmount);         
+		ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &ChangeDelayAmount);        
       }
       else
       {
@@ -157,7 +155,7 @@ bool SwichState()
   bool OkButton = false;
   ReadMemory(EepromTab[PIR_STATE].eeprom_par_value, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
   short OldSwitch = EepromTab[PIR_STATE].eeprom_par_value;
-  short SwitchOnOff = EepromTab[PIR_STATE].eeprom_par_value;
+  short SwitchOnOff = TURN_OFF;
 
   // Pulire LCD
   ClearLCD();
@@ -564,7 +562,7 @@ bool InfoScroll()
     {
       ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg);
 	  ReadMemory(EepromTab[Page].eeprom_par_addr, numReg, &EepromTab[Page].eeprom_par_value);
-      Serial.println(EepromTab[Page].eeprom_par_value);
+
     }
 	else
 	{

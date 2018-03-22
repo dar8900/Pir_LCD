@@ -44,7 +44,7 @@ CREATE_MENU MainSetupItems[] =
 EEPROM_ITEM EepromTab[] = 
 {
   {MIN_LIGHT_DELAY			,  START_DELAY_ADDR       , 1,  "Light delay"   , CHANGE_VALUE},
-  {OFF     					,  SWITCH_PIR_ADDR        , 1,  "PIR state"     , SWITCH_STATE},
+  {TURN_OFF					,  SWITCH_PIR_ADDR        , 1,  "PIR state"     , SWITCH_STATE},
 #ifdef RTC_INSERTED
   {BAND_INVALID_VALUE       ,  HOUR_BAND_1_ADDR       , 1,  "Hour band 1"   , TIME_BAND_NUM},
   {BAND_INVALID_VALUE    	,  HOUR_BAND_2_ADDR       , 1,  "Hour band 2"   , TIME_BAND_NUM},
@@ -351,6 +351,7 @@ void BlinkLed(short pin)
 void setup()
 {
   short numReg;
+  bool MemoryEmpty;
   
   Serial.begin(9600);
   
@@ -406,9 +407,21 @@ void setup()
   //ReadBandFromEeprom();
  #endif 
   
-  ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg); // Inizializzo il numero registri per il delay
-  ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
-  ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
+  MemoryEmpty = IsMemoryEmpty();
+  
+  if(!MemoryEmpty)
+  {
+		ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg); // Inizializzo il numero registri per il delay
+		ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
+		ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);	  
+  }
+  else
+  {
+		WriteMemory(NUM_REG_ADDR, 1);
+		WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_value);
+		WriteMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_value);		
+  }
+
  
   
   ClearLCD();
@@ -457,6 +470,7 @@ void loop()
 	else
 		OFF(PIR_SWITCH);
 #else
+	ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, 1, &EepromTab[PIR_STATE].eeprom_par_value);
 	if(EepromTab[PIR_STATE].eeprom_par_value == TURN_ON)
 	{
 		ON(PIR_SWITCH);

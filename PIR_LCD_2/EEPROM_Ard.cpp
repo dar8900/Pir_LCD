@@ -130,6 +130,21 @@ bool ClearMemory()
 	// Tempo di cancellazione 3.3 s
 	for(int i = 0; i < MAX_EEPROM_DIM; i++)
 	{
-		EEPROM.update(i, 0);
-	}	
+		EEPROM.update(i, 255);
+	}
+	return true;
+}
+
+bool IsMemoryEmpty()
+{
+	bool Empty = true;
+	short Value;
+	for(int i = 0; i < MAX_EEPROM_DIM; i++)
+	{
+		Value = EEPROM.read(i);
+		if(Value != 255)
+			Empty = false;		
+		
+	}
+	return Empty;
 }
