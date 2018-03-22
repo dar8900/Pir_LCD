@@ -10,10 +10,10 @@ resto = 163
 */
 
 
-int WriteMemory(int address, int value)
+int WriteMemory(short address, short value)
 {
-  int FlagValueBig = 0;
-  int numReg;
+  byte FlagValueBig = 0;
+  byte numReg;
   int resto = value % MAX_CELL_EEPROM;
 
   if(address < MAX_EEPROM_DIM)
@@ -89,10 +89,10 @@ int WriteMemory(int address, int value)
   return  numReg;
 }
 
-bool ReadMemory(int address, int numReg, int *value)
+bool ReadMemory(short address, byte numReg, short *value)
 {
   int ValueRead;
-  int FlagValueBig = 0;
+  byte FlagValueBig = 0;
   bool ReadOk = false;
   if(address == START_DELAY_ADDR)
   {

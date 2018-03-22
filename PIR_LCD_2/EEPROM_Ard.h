@@ -1,6 +1,8 @@
 #ifndef EEPROM_ARD_H
 #define EEPROM_ARD_H
 
+#include <Arduino.h>
+
 #define MAX_EEPROM_DIM	      EEPROM.length()
 #define MAX_CELL_EEPROM	                  254
 
@@ -19,7 +21,7 @@
 #define NUM_REG_ADDR                       51
 
 
-int WriteMemory(int address, int value);
-bool ReadMemory(int address, int numReg, int *value);
+int WriteMemory(short address, short value);
+bool ReadMemory(short address, byte numReg, short *value);
 
 #endif

@@ -2,44 +2,50 @@
 #include <Wire.h>  // Libreria di sistema - E' richiesta da I2CIO.cpp
 #include <LiquidCrystal_I2C.h> // Libreria LCD I2C
 
+#include "PIR_LCD_2.h"
 #include "EEPROM_Ard.h"
 #include "Band_Func.h"
-#include "PIR_LCD_2.h"
 #include "MenuFunc.h"
 
 //LiquidCrystal_I2C lcd_main(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // Old version
 LiquidCrystal_I2C lcd_main(0x27, 20,4);
 
+#ifdef RTC_INSERTED
 TIME_FOMAT PresentTime;  // Variabili per l'orario
 DATE_FOMAT PresentDate;  // Si perdono allo spegnimento ma vengono aggiornate subito all'accensione
 						 //	
 TIME_BAND Band_1, Band_2;//
 
-
 RTC_DS1307 RTC;
+#endif
 
-int FlagBacklight = 0;
-int SetupOk = 0;
-int FlagSetup = 0;
-int FlagShowInfo = 0;
+bool FlagBacklight = false;
+bool SetupOk = 0;
+bool FlagSetup = 0;
+bool FlagShowInfo = 0;
+
+#ifdef RTC_INSERTED
 bool FlagBandOk = false;
 bool FlagAllBandsInvalid = false;
+#endif
 
-
-bool ChangeDateTime(TIME_BAND  Band);
+// bool ChangeDateTime(TIME_BAND  Band);
 
 CREATE_MENU MainSetupItems[] = 
 {
   {"Change light delay", CHANGE_VALUE , ChangeValue		},
   {"Change PIR state"  , SWITCH_STATE , SwichState 		},
   {"Show Info"         , INFO         , InfoScroll      },
+#ifdef RTC_INSERTED
   {"Change Time Bands" , TIME_BAND_NUM, ChangeTimeBands },
+#endif
 };
 
 EEPROM_ITEM EepromTab[] = 
 {
   {MIN_LIGHT_DELAY			,  START_DELAY_ADDR       , 1,  "Light delay"   , CHANGE_VALUE},
   {OFF     					,  SWITCH_PIR_ADDR        , 1,  "PIR state"     , SWITCH_STATE},
+#ifdef RTC_INSERTED
   {BAND_INVALID_VALUE       ,  HOUR_BAND_1_ADDR       , 1,  "Hour band 1"   , TIME_BAND_NUM},
   {BAND_INVALID_VALUE    	,  HOUR_BAND_2_ADDR       , 1,  "Hour band 2"   , TIME_BAND_NUM},
   {BAND_INVALID_VALUE       ,  MINUTE_BAND_1_ADDR     , 1,  "Minutes band 1", TIME_BAND_NUM},
@@ -48,6 +54,7 @@ EEPROM_ITEM EepromTab[] =
   {BAND_INVALID_VALUE    	,  DAY_BAND_2_ADDR        , 1,  "Day band 2"    , TIME_BAND_NUM},
   {BAND_INVALID_VALUE    	,  MONTH_BAND_1_ADDR      , 1,  "Month band 1"   , TIME_BAND_NUM},
   {BAND_INVALID_VALUE    	,  MONTH_BAND_2_ADDR      , 1,  "Month band 2"   , TIME_BAND_NUM},
+#endif
 };
 
 
@@ -78,7 +85,7 @@ void LcdTimeWrite(int Time2Write)
 }
 
 // Utilizzano un oggetto di tipo LCD
-void LCDPrintString(int row, int col, String string) 
+void LCDPrintString(byte row, byte col, String string) 
 {
   if(col > MAX_LCD_COL || row > MAX_LCD_ROW || string.length() > 20) // ???
   {
@@ -108,7 +115,7 @@ void LCDPrintString(int row, int col, String string)
 
 }
 
-void LCDPrintValue(int row, int col, int value)
+void LCDPrintValue(byte row, byte col, short value)
 {
   String ValStr = String(value);
   if(col > MAX_LCD_COL || row > MAX_LCD_ROW || ValStr.length() > 20)
@@ -139,7 +146,7 @@ void LCDPrintValue(int row, int col, int value)
   lcd_main.print(ValStr);
 }
 
-void LCDPrintLineVoid(int row)
+void LCDPrintLineVoid(byte row)
 {
   lcd_main.setCursor(0, row);
   lcd_main.print("                    ");
@@ -155,10 +162,10 @@ void LCDDisplayOn()
 
 void MainSetup()
 {
-  int buttonUp = LOW, buttonDown = LOW;
-  int OkButton = LOW; //  Resetto ExitButton
+  byte buttonUp = LOW, buttonDown = LOW;
+  byte OkButton = LOW; //  Resetto ExitButton
   bool ExitSetup = false;
-  int Page = MIN_MENU_PAGES;
+  byte Page = MIN_MENU_PAGES;
   
   OFF(RED_LED);
   OFF(GREEN_LED);
@@ -219,7 +226,7 @@ void MainSetup()
 
 void InterruptFunc()
 {
-  int timer = 6; // 0.1s c.a (105ms)
+  byte timer = 6; // 0.1s c.a (105ms)
   while(timer > 0)
   {
     timer--;
@@ -268,8 +275,8 @@ void WriteHomeMsg()
 
 void gestionePIR(int analogPin)
 {
-  int val = 0;
-  int numReg;
+  short val = 0;
+  byte numReg;
   val = analogRead(analogPin);    
   val = (val *5)/1024;
   ClearLCD();
@@ -279,7 +286,7 @@ void gestionePIR(int analogPin)
     FlagBacklight = true;
     ON(GREEN_LED); 
     OFF(RED_LED);
-    ReadMemory(NUM_REG_ADDR , 1, &numReg);
+    ReadMemory(NUM_REG_ADDR , 1, (short*)&numReg);
     ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
 	ON(LIGHT_SWITCH);
     LcdTimeWrite(EepromTab[DELAY_AMOUNT].eeprom_par_value);
@@ -295,8 +302,8 @@ void gestionePIR(int analogPin)
 
 void ShowInfoMsg()
 {
-	int InfoPressed = LOW;
-	int timer = 6; // 0.06s c.a (60ms)
+	byte InfoPressed = LOW;
+	byte timer = 6; // 0.06s c.a (60ms)
 	String Time, Date;
     while(timer > 0)
     {
@@ -319,12 +326,14 @@ void ShowInfoMsg()
 		LCDPrintString(2, CENTER_ALIGN, "for the menu");
 		delay(1000);
 		ClearLCD();
+#ifdef RTC_INSERTED
 		LCDPrintString(0, CENTER_ALIGN, "Change the bands");
 		LCDPrintString(1, CENTER_ALIGN, "to set when");
 		LCDPrintString(2, CENTER_ALIGN, "turn ON");
 		LCDPrintString(2, CENTER_ALIGN, "the sensor");
 		delay(3000);
 		ClearLCD();
+#endif
 	}
 	
 	
@@ -332,7 +341,7 @@ void ShowInfoMsg()
 
 
 // Blink del led per 5ms
-void BlinkLed(int pin) 
+void BlinkLed(byte pin) 
 {
   digitalWrite(pin, HIGH);
   delay(5);
@@ -341,7 +350,7 @@ void BlinkLed(int pin)
 
 void setup()
 {
-  int numReg;
+  byte numReg;
   
   Serial.begin(9600);
   
@@ -355,7 +364,7 @@ void setup()
   pinMode(PIR_SWITCH, OUTPUT);
   pinMode(LIGHT_SWITCH, OUTPUT);
 
-
+#ifdef RTC_INSERTED
   if (!RTC.begin()) 
   {
     Serial.println("Couldn't find RTC");
@@ -374,7 +383,8 @@ void setup()
 		OFF(YELLOW_LED);
 		OFF(BLUE_LED);		
     }
-  
+#endif
+	
   lcd_main.begin(20,4);  
   delay(1000);
   lcd_main.noBlink(); 
@@ -384,7 +394,7 @@ void setup()
 	IN MODO CHE NON SI POSSA SUPERARE IL NUMERO DI GIORNI PER IL MESE CORRENTE
 	QUANDO USO LA FUNZIONE PER IL CAMBIAMENTO DI DATA
 	*/
-  
+#ifdef RTC_INSERTED  
   DateTime now = RTC.now();
   PresentDate.day = now.day();
   PresentDate.month = now.month();
@@ -394,9 +404,9 @@ void setup()
  
   SetBandInvalid(); // NON QUESTO MA SETTARE LE VARIABILI GLOBALI BAND_1 BAND_2 LEGGENDO DALLA MEMORIA 
   //ReadBandFromEeprom();
+ #endif 
   
-  
-  ReadMemory(NUM_REG_ADDR, 1, &numReg); // Inizializzo il numero registri per il delay
+  ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg); // Inizializzo il numero registri per il delay
   ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
   ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
  
@@ -428,6 +438,7 @@ void loop()
   {
 	// INSERIRE BOOLEANO PER CHEK DEL BAND, NEL CASO FOSSE FALSE (OVVERO FUORI FASCIA O INVALIDO) 
 	// SPEGNERE IL SENSORE, ALTRIMENTI LASCIARE LA GESTIONE CHE C'è ORA
+#ifdef RTC_INSERTED
 	ChekBandValue();
 	if(FlagBandOk)
 	{
@@ -444,6 +455,18 @@ void loop()
 	}
 	else
 		OFF(PIR_SWITCH);
+#else
+	if(EepromTab[PIR_STATE].eeprom_par_value == TURN_ON)
+	{
+		ON(PIR_SWITCH);
+		delay(150);
+		gestionePIR(AnalogPirPin);
+	}
+	else
+	{
+		OFF(PIR_SWITCH);
+	}
+#endif  	
 
   }
 }

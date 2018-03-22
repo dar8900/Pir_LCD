@@ -25,6 +25,9 @@
 
 #define BAND_INVALID_VALUE 	99
 
+#undef RTC_INSERTED
+
+#ifdef RTC_INSERTED
 typedef enum
 {
   CHANGE_VALUE = 0,   // menu dove cambi solo un valore numerico
@@ -32,7 +35,14 @@ typedef enum
   INFO,        // menu a scorrimento automatico con tutte le info salvate in eeprom
   TIME_BAND_NUM
 } MENU_TYPE_NBR;
-
+#else
+typedef enum
+{
+  CHANGE_VALUE = 0,   // menu dove cambi solo un valore numerico
+  SWITCH_STATE,   // menu dove viene gestito solo lo switch on off per uscite digitali
+  INFO       // menu a scorrimento automatico con tutte le info salvate in eeprom
+} MENU_TYPE_NBR;
+#endif
 
 typedef struct
 {
@@ -44,9 +54,9 @@ typedef struct
 
 typedef struct
 {
-  int eeprom_par_value;
-  int eeprom_par_addr;
-  int eeprom_par_numReg;
+  short eeprom_par_value;
+  short eeprom_par_addr;
+  byte eeprom_par_numReg;
   String  eeprom_par_name;
   MENU_TYPE_NBR typeMenu;
 } EEPROM_ITEM;
@@ -55,6 +65,7 @@ typedef enum
 {
   DELAY_AMOUNT = 0,
   PIR_STATE,
+#ifdef RTC_INSERTED
   HOUR_BAND_1,
   HOUR_BAND_2, 
   MINUTE_BAND_1, 
@@ -63,6 +74,7 @@ typedef enum
   DAY_BAND_2, 
   MONTH_BAND_1, 
   MONTH_BAND_2,
+#endif
   MAX_EEPROM_ITEM
  
 }EEPROM_ITEM_ENUM;
@@ -73,6 +85,7 @@ enum
   TURN_OFF
 };
 
+#ifdef RTC_INSERTED
 typedef struct
 {
 	byte hour;
@@ -83,7 +96,7 @@ typedef struct
 {
 	byte day;
 	byte month;
-	byte year;
+	short year;
 } DATE_FOMAT;
 
 typedef struct
@@ -91,6 +104,7 @@ typedef struct
 	TIME_FOMAT BandTime;
 	DATE_FOMAT BandDate;
 } TIME_BAND;
+#endif
 
 enum
 {

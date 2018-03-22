@@ -3,17 +3,19 @@
 #include "Band_Func.h"
 #include "MenuFunc.h"
 
-
+#ifdef RTC_INSERTED
 extern TIME_BAND Band_1;
 extern TIME_BAND Band_2;
 extern DATE_FOMAT PresentDate;
 extern TIME_FOMAT PresentTime;
+#endif
+
 extern EEPROM_ITEM EepromTab[];
 
-extern int FlagBacklight;
-extern int SetupOk;
-extern int FlagSetup;
-extern int FlagShowInfo;
+extern bool FlagBacklight;
+extern bool SetupOk;
+extern bool FlagSetup;
+extern bool FlagShowInfo;
 extern bool FlagBandOk;
 extern bool FlagAllBandsInvalid;
 
@@ -54,14 +56,14 @@ bool EnterSetupButton()
 
 bool ChangeValue()
 {
-  int buttonUp = 0, buttonDown = 0;
+  byte buttonUp = 0, buttonDown = 0;
   bool OkButton = false;
-  int numReg;
-  //ReadMemory(NUM_REG_ADDR, 1, &EepromTab[DELAY_AMOUNT].eeprom_par_numReg);
-  ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
+  byte numReg;
+  ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg);
+  ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
   Serial.println(EepromTab[DELAY_AMOUNT].eeprom_par_numReg);
-  int oldDelayAmount = EepromTab[DELAY_AMOUNT].eeprom_par_value;
-  int ChangeDelayAmount = EepromTab[DELAY_AMOUNT].eeprom_par_value;
+  short oldDelayAmount = EepromTab[DELAY_AMOUNT].eeprom_par_value;
+  short ChangeDelayAmount = EepromTab[DELAY_AMOUNT].eeprom_par_value;
 
   // Pulire LCD
   ClearLCD();
@@ -124,7 +126,7 @@ bool ChangeValue()
       {
         LCDPrintString(1,CENTER_ALIGN,"Value Saved!");
         WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, ChangeDelayAmount);
-		ReadMemory(NUM_REG_ADDR, 1, &numReg);
+		ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg);
 		ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &ChangeDelayAmount);
         Serial.println(ChangeDelayAmount);         
       }
@@ -151,11 +153,11 @@ bool ChangeValue()
 bool SwichState()
 {
   
-  int buttonUp = 0, buttonDown = 0;
+  byte buttonUp = 0, buttonDown = 0;
   bool OkButton = false;
   ReadMemory(EepromTab[PIR_STATE].eeprom_par_value, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
-  int OldSwitch = EepromTab[PIR_STATE].eeprom_par_value;
-  int SwitchOnOff = EepromTab[PIR_STATE].eeprom_par_value;
+  byte OldSwitch = (byte) EepromTab[PIR_STATE].eeprom_par_value;
+  byte SwitchOnOff = (byte)EepromTab[PIR_STATE].eeprom_par_value;
 
   // Pulire LCD
   ClearLCD();
@@ -229,9 +231,10 @@ bool SwichState()
     
 }
 
+#ifdef RTC_INSERTED
 bool ChangeDateTime(TIME_BAND  Band)
 {
-  int buttonUp = LOW, buttonDown = LOW, OkTime = LOW;
+  byte buttonUp = LOW, buttonDown = LOW, OkTime = LOW;
   bool OkButton = false;
   TIME_FOMAT ChangedTime;
   DATE_FOMAT ChangedDate;
@@ -524,14 +527,15 @@ bool ChangeDateTime(TIME_BAND  Band)
   return OkButton;
 
 }
+#endif
 
 bool InfoScroll()
 {
-  int buttonUp = LOW, buttonDown = LOW;
-  int ExitButton = LOW; //  Resetto ExitButton
+  byte buttonUp = LOW, buttonDown = LOW;
+  byte ExitButton = LOW; //  Resetto ExitButton
   bool ExitInfo = false;
-  int Page = MIN_INFO_PAGES;
-  int numReg;
+  byte Page = MIN_INFO_PAGES;
+  byte numReg;
   String tmpEepromValue;
   String TimeStr, DateStr;
   
@@ -558,7 +562,7 @@ bool InfoScroll()
     delay(100);
     if(Page == DELAY_AMOUNT)
     {
-      ReadMemory(NUM_REG_ADDR, 1, &numReg);
+      ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg);
 	  ReadMemory(EepromTab[Page].eeprom_par_addr, numReg, &EepromTab[Page].eeprom_par_value);
       Serial.println(EepromTab[Page].eeprom_par_value);
     }
@@ -577,6 +581,7 @@ bool InfoScroll()
       else
         LCDPrintString(2, CENTER_ALIGN, "Off");
     }
+#ifdef RTC_INSERTED
 	else if(EepromTab[Page].typeMenu == TIME_BAND_NUM)
 	{
 		TimeStr = String(PresentTime.hour) + ":" + String(PresentTime.minute);
@@ -584,6 +589,7 @@ bool InfoScroll()
 		LCDPrintString(1, CENTER_ALIGN, TimeStr);
 		LCDPrintString(2, CENTER_ALIGN, DateStr);
 	}
+#endif
     else
     {
       tmpEepromValue = String(EepromTab[Page].eeprom_par_value);
@@ -629,6 +635,7 @@ bool InfoScroll()
   return ExitInfo;
 }
 
+#ifdef RTC_INSERTED
 bool ChangeTimeBands()
 {
 	ClearLCD();
@@ -681,3 +688,4 @@ bool ChangeTimeBands()
 
 	return ExitChangeBand;
 }
+#endif
