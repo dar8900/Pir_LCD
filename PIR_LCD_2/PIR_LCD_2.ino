@@ -1,123 +1,123 @@
 #include "EEPROM_Ard.h"
-#include "RTClib.h"
+#include "Band_Func.h"
+#include "PIR_LCD_2.h"
 
+#include <RTClib.h>
 #include <Wire.h>  // Libreria di sistema - E' richiesta da I2CIO.cpp
 #include <LiquidCrystal_I2C.h> // Libreria LCD I2C
 
-//LiquidCrystal_I2C lcd_main(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
+//LiquidCrystal_I2C lcd_main(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // Old version
 LiquidCrystal_I2C lcd_main(0x27, 20,4);
 
-#define MAX_LIGHT_DELAY   600 // In secondi
-#define MIN_LIGHT_DELAY    20 // In secondi
+// #define MAX_LIGHT_DELAY   600 // In secondi
+// #define MIN_LIGHT_DELAY    20 // In secondi
 
-#define MIN_MENU_PAGES   0
-#define MAX_MENU_PAGES  sizeof(MainSetupItems)/sizeof(CREATE_MENU)
-
-
-#define MIN_INFO_PAGES  0
-#define MAX_INFO_PAGES  sizeof(EepromTab)/sizeof(EEPROM_ITEM)
-
-#define MAX_LCD_ROW    3
-#define MAX_LCD_COL   19
-
-#define CENTER_ALIGN  10
-#define RIGHT_ALIGN    19
-#define LEFT_ALIGN     0
-
-#define  OFF(pin)  digitalWrite(pin, LOW)
-#define  ON(pin)   digitalWrite(pin, HIGH)
-
-#define AnalogPirPin  0
-
-#define AUTOSCROLL_TIMER  100
-
-#define BAND_INVALID_VALUE 	99
-
-typedef enum
-{
-  CHANGE_VALUE = 0,   // menu dove cambi solo un valore numerico
-  SWITCH_STATE,   // menu dove viene gestito solo lo switch on off per uscite digitali
-  INFO,        // menu a scorrimento automatico con tutte le info salvate in eeprom
-  TIME_BAND_NUM
-} MENU_TYPE_NBR;
+// #define MIN_MENU_PAGES   0
+// #define MAX_MENU_PAGES  sizeof(MainSetupItems)/sizeof(CREATE_MENU)
 
 
-typedef struct
-{
-  String nameMenu;
-  MENU_TYPE_NBR typeMenu;
-  bool (*MenuFunc)(void);
-} CREATE_MENU;
+// #define MIN_INFO_PAGES  0
+// #define MAX_INFO_PAGES  sizeof(EepromTab)/sizeof(EEPROM_ITEM)
+
+// #define MAX_LCD_ROW    3
+// #define MAX_LCD_COL   19
+
+// #define CENTER_ALIGN  10
+// #define RIGHT_ALIGN    19
+// #define LEFT_ALIGN     0
+
+// #define  OFF(pin)  digitalWrite(pin, LOW)
+// #define  ON(pin)   digitalWrite(pin, HIGH)
+
+// #define AnalogPirPin  0
+
+// #define AUTOSCROLL_TIMER  100
+
+// #define BAND_INVALID_VALUE 	99
+
+// typedef enum
+// {
+  // CHANGE_VALUE = 0,   // menu dove cambi solo un valore numerico
+  // SWITCH_STATE,   // menu dove viene gestito solo lo switch on off per uscite digitali
+  // INFO,        // menu a scorrimento automatico con tutte le info salvate in eeprom
+  // TIME_BAND_NUM
+// } MENU_TYPE_NBR;
 
 
-typedef struct
-{
-  int eeprom_par_value;
-  int eeprom_par_addr;
-  int eeprom_par_numReg;
-  String  eeprom_par_name;
-  MENU_TYPE_NBR typeMenu;
-} EEPROM_ITEM;
+// typedef struct
+// {
+  // String nameMenu;
+  // MENU_TYPE_NBR typeMenu;
+  // bool (*MenuFunc)(void);
+// } CREATE_MENU;
 
-typedef enum
-{
-  DELAY_AMOUNT = 0,
-  PIR_STATE,
-  HOUR_BAND_1,
-  HOUR_BAND_2, 
-  MINUTE_BAND_1, 
-  MINUTE_BAND_2, 
-  DAY_BAND_1, 
-  DAY_BAND_2, 
-  MONTH_BAND_1, 
-  MONTH_BAND_2 
+
+// typedef struct
+// {
+  // int eeprom_par_value;
+  // int eeprom_par_addr;
+  // int eeprom_par_numReg;
+  // String  eeprom_par_name;
+  // MENU_TYPE_NBR typeMenu;
+// } EEPROM_ITEM;
+
+// typedef enum
+// {
+  // DELAY_AMOUNT = 0,
+  // PIR_STATE,
+  // HOUR_BAND_1,
+  // HOUR_BAND_2, 
+  // MINUTE_BAND_1, 
+  // MINUTE_BAND_2, 
+  // DAY_BAND_1, 
+  // DAY_BAND_2, 
+  // MONTH_BAND_1, 
+  // MONTH_BAND_2 
  
-}EEPROM_ITEM_ENUM;
+// }EEPROM_ITEM_ENUM;
 
-enum
-{
-  TURN_ON = 0,
-  TURN_OFF
-};
+// enum
+// {
+  // TURN_ON = 0,
+  // TURN_OFF
+// };
 
-typedef struct
-{
-	byte hour;
-	byte minute;
-} TIME_FOMAT;
+// typedef struct
+// {
+	// byte hour;
+	// byte minute;
+// } TIME_FOMAT;
 
-typedef struct
-{
-	byte day;
-	byte month;
-	byte year;
-} DATE_FOMAT;
+// typedef struct
+// {
+	// byte day;
+	// byte month;
+	// byte year;
+// } DATE_FOMAT;
 
-typedef struct
-{
-	TIME_FOMAT BandTime;
-	DATE_FOMAT BandDate;
-} TIME_BAND;
+// typedef struct
+// {
+	// TIME_FOMAT BandTime;
+	// DATE_FOMAT BandDate;
+// } TIME_BAND;
 
+// enum
+// {
+  // BUTTON_UP = 2,
+  // BUTTON_DOWN,
+  // BUTTON_SETUP,
+  // RED_LED,
+  // GREEN_LED,
+  // BLUE_LED,
+  // YELLOW_LED,
+  // PIR_SWITCH,
+  // LIGHT_SWITCH
+// };
 
 TIME_FOMAT PresentTime;  // Variabili per l'orario
 DATE_FOMAT PresentDate;  // Si perdono allo spegnimento ma vengono aggiornate subito all'accensione
 						 //	
 TIME_BAND Band_1, Band_2;//
-
-
-enum
-{
-  BUTTON_UP = 2,
-  BUTTON_DOWN,
-  BUTTON_SETUP,
-  RED_LED,
-  GREEN_LED,
-  BLUE_LED,
-  YELLOW_LED,
-  PIR_SWITCH,
-  LIGHT_SWITCH
-};
 
 
 RTC_DS1307 RTC;
@@ -635,31 +635,31 @@ bool ChangeDateTime(TIME_BAND  Band)
 
 }
 
-void SaveBandToEeprom()
-{
-	WriteMemory(EepromTab[HOUR_BAND_1].eeprom_par_addr		, Band_1.BandTime.hour);
-	WriteMemory(EepromTab[HOUR_BAND_2].eeprom_par_addr		, Band_2.BandTime.hour);
-	WriteMemory(EepromTab[MINUTE_BAND_1].eeprom_par_addr	, Band_1.BandTime.minute);
-	WriteMemory(EepromTab[MINUTE_BAND_2].eeprom_par_addr 	, Band_2.BandTime.minute);
-	WriteMemory(EepromTab[DAY_BAND_1].eeprom_par_addr		, Band_1.BandDate.day);
-	WriteMemory(EepromTab[DAY_BAND_2].eeprom_par_addr		, Band_2.BandDate.day);
-	WriteMemory(EepromTab[MONTH_BAND_1].eeprom_par_addr		, Band_1.BandDate.month);
-	WriteMemory(EepromTab[MONTH_BAND_2].eeprom_par_addr		, Band_2.BandDate.month);	
-	return;
-}
+// void SaveBandToEeprom()
+// {
+	// WriteMemory(EepromTab[HOUR_BAND_1].eeprom_par_addr		, Band_1.BandTime.hour);
+	// WriteMemory(EepromTab[HOUR_BAND_2].eeprom_par_addr		, Band_2.BandTime.hour);
+	// WriteMemory(EepromTab[MINUTE_BAND_1].eeprom_par_addr	, Band_1.BandTime.minute);
+	// WriteMemory(EepromTab[MINUTE_BAND_2].eeprom_par_addr 	, Band_2.BandTime.minute);
+	// WriteMemory(EepromTab[DAY_BAND_1].eeprom_par_addr		, Band_1.BandDate.day);
+	// WriteMemory(EepromTab[DAY_BAND_2].eeprom_par_addr		, Band_2.BandDate.day);
+	// WriteMemory(EepromTab[MONTH_BAND_1].eeprom_par_addr		, Band_1.BandDate.month);
+	// WriteMemory(EepromTab[MONTH_BAND_2].eeprom_par_addr		, Band_2.BandDate.month);	
+	// return;
+// }
 
-void ReadBandFromEeprom()
-{
-  ReadMemory(EepromTab[HOUR_BAND_1].eeprom_par_addr	, EepromTab[HOUR_BAND_1].eeprom_par_numReg	, (int&)(Band_1.BandTime.hour));
-	ReadMemory(EepromTab[HOUR_BAND_2].eeprom_par_addr	, EepromTab[HOUR_BAND_2].eeprom_par_numReg	, (int&)(Band_2.BandTime.hour));
-	ReadMemory(EepromTab[MINUTE_BAND_1].eeprom_par_addr , EepromTab[MINUTE_BAND_1].eeprom_par_numReg, (int&)(Band_1.BandTime.minute));
-	ReadMemory(EepromTab[MINUTE_BAND_2].eeprom_par_addr , EepromTab[MINUTE_BAND_2].eeprom_par_numReg, (int&)(Band_2.BandTime.minute));
-	ReadMemory(EepromTab[DAY_BAND_1].eeprom_par_addr	, EepromTab[DAY_BAND_1].eeprom_par_numReg	, (int&)(Band_1.BandDate.day));
-	ReadMemory(EepromTab[DAY_BAND_2].eeprom_par_addr	, EepromTab[DAY_BAND_2].eeprom_par_numReg	, (int&)(Band_2.BandDate.day));
-	ReadMemory(EepromTab[MONTH_BAND_1].eeprom_par_addr	, EepromTab[MONTH_BAND_1].eeprom_par_numReg	, (int&)(Band_1.BandDate.month));
-	ReadMemory(EepromTab[MONTH_BAND_2].eeprom_par_addr	, EepromTab[MONTH_BAND_2].eeprom_par_numReg	, (int&)(Band_2.BandDate.month));	
-	return;
-}
+// void ReadBandFromEeprom()
+// {
+  // ReadMemory(EepromTab[HOUR_BAND_1].eeprom_par_addr	, EepromTab[HOUR_BAND_1].eeprom_par_numReg	, (int&)(Band_1.BandTime.hour));
+	// ReadMemory(EepromTab[HOUR_BAND_2].eeprom_par_addr	, EepromTab[HOUR_BAND_2].eeprom_par_numReg	, (int&)(Band_2.BandTime.hour));
+	// ReadMemory(EepromTab[MINUTE_BAND_1].eeprom_par_addr , EepromTab[MINUTE_BAND_1].eeprom_par_numReg, (int&)(Band_1.BandTime.minute));
+	// ReadMemory(EepromTab[MINUTE_BAND_2].eeprom_par_addr , EepromTab[MINUTE_BAND_2].eeprom_par_numReg, (int&)(Band_2.BandTime.minute));
+	// ReadMemory(EepromTab[DAY_BAND_1].eeprom_par_addr	, EepromTab[DAY_BAND_1].eeprom_par_numReg	, (int&)(Band_1.BandDate.day));
+	// ReadMemory(EepromTab[DAY_BAND_2].eeprom_par_addr	, EepromTab[DAY_BAND_2].eeprom_par_numReg	, (int&)(Band_2.BandDate.day));
+	// ReadMemory(EepromTab[MONTH_BAND_1].eeprom_par_addr	, EepromTab[MONTH_BAND_1].eeprom_par_numReg	, (int&)(Band_1.BandDate.month));
+	// ReadMemory(EepromTab[MONTH_BAND_2].eeprom_par_addr	, EepromTab[MONTH_BAND_2].eeprom_par_numReg	, (int&)(Band_2.BandDate.month));	
+	// return;
+// }
 
 bool ChangeTimeBands()
 {
@@ -897,44 +897,44 @@ bool ChangeValue()
 }
 
 
-void SetBandInvalid()
-{
-  Band_1.BandTime.hour = BAND_INVALID_VALUE;
-  Band_1.BandTime.minute = BAND_INVALID_VALUE;
-  Band_1.BandDate.day = BAND_INVALID_VALUE;
-  Band_1.BandDate.month = BAND_INVALID_VALUE;
-  Band_2.BandTime.hour = BAND_INVALID_VALUE;
-  Band_2.BandTime.minute = BAND_INVALID_VALUE;
-  Band_2.BandDate.day = BAND_INVALID_VALUE;
-  Band_2.BandDate.month = BAND_INVALID_VALUE;	
-  FlagAllBandsInvalid = true;
-}
+// void SetBandInvalid()
+// {
+  // Band_1.BandTime.hour = BAND_INVALID_VALUE;
+  // Band_1.BandTime.minute = BAND_INVALID_VALUE;
+  // Band_1.BandDate.day = BAND_INVALID_VALUE;
+  // Band_1.BandDate.month = BAND_INVALID_VALUE;
+  // Band_2.BandTime.hour = BAND_INVALID_VALUE;
+  // Band_2.BandTime.minute = BAND_INVALID_VALUE;
+  // Band_2.BandDate.day = BAND_INVALID_VALUE;
+  // Band_2.BandDate.month = BAND_INVALID_VALUE;	
+  // FlagAllBandsInvalid = true;
+// }
 
 
-void ChekBandValue()
-{
-	bool InvalidBand = false;
+// void ChekBandValue()
+// {
+	// bool InvalidBand = false;
 	
-	if(Band_1.BandTime.hour == BAND_INVALID_VALUE || Band_1.BandTime.minute == BAND_INVALID_VALUE || Band_1.BandDate.day == BAND_INVALID_VALUE ||  Band_1.BandDate.month== BAND_INVALID_VALUE ||
-	   Band_2.BandTime.hour == BAND_INVALID_VALUE || Band_2.BandTime.minute == BAND_INVALID_VALUE || Band_2.BandDate.day == BAND_INVALID_VALUE || Band_2.BandDate.month == BAND_INVALID_VALUE)
-	   {
-		   InvalidBand = true;
-		   FlagBandOk = false;
-		   SetBandInvalid();	   
-	   }
-	if(!InvalidBand)
-	{
-		if((PresentTime.hour >= Band_1.BandTime.hour && PresentTime.hour <= Band_2.BandTime.hour) && (PresentTime.minute >= Band_1.BandTime.minute && PresentTime.minute <= Band_2.BandTime.minute) &&
-		   (PresentDate.day >= Band_1.BandDate.day && PresentDate.day <= Band_2.BandDate.day) && (PresentDate.month >= Band_1.BandDate.month && PresentDate.month <= Band_2.BandDate.month))
-		{
-		   FlagBandOk = true;
-		}
-		else
-		{
-		   FlagBandOk = false;
-		}		
-	}
-}
+	// if(Band_1.BandTime.hour == BAND_INVALID_VALUE || Band_1.BandTime.minute == BAND_INVALID_VALUE || Band_1.BandDate.day == BAND_INVALID_VALUE ||  Band_1.BandDate.month== BAND_INVALID_VALUE ||
+	   // Band_2.BandTime.hour == BAND_INVALID_VALUE || Band_2.BandTime.minute == BAND_INVALID_VALUE || Band_2.BandDate.day == BAND_INVALID_VALUE || Band_2.BandDate.month == BAND_INVALID_VALUE)
+	   // {
+		   // InvalidBand = true;
+		   // FlagBandOk = false;
+		   // SetBandInvalid();	   
+	   // }
+	// if(!InvalidBand)
+	// {
+		// if((PresentTime.hour >= Band_1.BandTime.hour && PresentTime.hour <= Band_2.BandTime.hour) && (PresentTime.minute >= Band_1.BandTime.minute && PresentTime.minute <= Band_2.BandTime.minute) &&
+		   // (PresentDate.day >= Band_1.BandDate.day && PresentDate.day <= Band_2.BandDate.day) && (PresentDate.month >= Band_1.BandDate.month && PresentDate.month <= Band_2.BandDate.month))
+		// {
+		   // FlagBandOk = true;
+		// }
+		// else
+		// {
+		   // FlagBandOk = false;
+		// }		
+	// }
+// }
 
 
 bool InfoScroll()
