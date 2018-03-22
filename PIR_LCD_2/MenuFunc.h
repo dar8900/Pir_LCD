@@ -3,12 +3,12 @@
 
 #include <Arduino.h>
 
-void LCDPrintString(byte row, byte col, String string);
-void LCDPrintValue(byte row, byte col, short value);
-void LCDPrintLineVoid(byte row);
+void LCDPrintString(short row, short col, String string);
+void LCDPrintValue(short row, short col, short value);
+void LCDPrintLineVoid(short row);
 void LCDDisplayOn();
 void ClearLCD();
-void BlinkLed(byte pin);
+void BlinkLed(short pin);
 
 bool EnterSetupButton();
 bool ChangeTimeBands();

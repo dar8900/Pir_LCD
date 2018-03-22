@@ -56,7 +56,7 @@ typedef struct
 {
   short eeprom_par_value;
   short eeprom_par_addr;
-  byte eeprom_par_numReg;
+  short eeprom_par_numReg;
   String  eeprom_par_name;
   MENU_TYPE_NBR typeMenu;
 } EEPROM_ITEM;
@@ -88,14 +88,14 @@ enum
 #ifdef RTC_INSERTED
 typedef struct
 {
-	byte hour;
-	byte minute;
+	short hour;
+	short minute;
 } TIME_FOMAT;
 
 typedef struct
 {
-	byte day;
-	byte month;
+	short day;
+	short month;
 	short year;
 } DATE_FOMAT;
 

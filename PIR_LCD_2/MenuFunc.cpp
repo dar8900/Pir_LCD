@@ -22,7 +22,7 @@ extern bool FlagAllBandsInvalid;
 
 const String OnOff[2] = {"On", "Off"};
 
-const byte TabDays4Month[] = 
+const short TabDays4Month[] = 
 {
   31,
   28,
@@ -56,9 +56,9 @@ bool EnterSetupButton()
 
 bool ChangeValue()
 {
-  byte buttonUp = 0, buttonDown = 0;
+  short buttonUp = 0, buttonDown = 0;
   bool OkButton = false;
-  byte numReg;
+  short numReg;
   ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg);
   ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
   Serial.println(EepromTab[DELAY_AMOUNT].eeprom_par_numReg);
@@ -153,11 +153,11 @@ bool ChangeValue()
 bool SwichState()
 {
   
-  byte buttonUp = 0, buttonDown = 0;
+  short buttonUp = 0, buttonDown = 0;
   bool OkButton = false;
   ReadMemory(EepromTab[PIR_STATE].eeprom_par_value, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
-  byte OldSwitch = (byte) EepromTab[PIR_STATE].eeprom_par_value;
-  byte SwitchOnOff = (byte)EepromTab[PIR_STATE].eeprom_par_value;
+  short OldSwitch = EepromTab[PIR_STATE].eeprom_par_value;
+  short SwitchOnOff = EepromTab[PIR_STATE].eeprom_par_value;
 
   // Pulire LCD
   ClearLCD();
@@ -234,7 +234,7 @@ bool SwichState()
 #ifdef RTC_INSERTED
 bool ChangeDateTime(TIME_BAND  Band)
 {
-  byte buttonUp = LOW, buttonDown = LOW, OkTime = LOW;
+  short buttonUp = LOW, buttonDown = LOW, OkTime = LOW;
   bool OkButton = false;
   TIME_FOMAT ChangedTime;
   DATE_FOMAT ChangedDate;
@@ -531,11 +531,11 @@ bool ChangeDateTime(TIME_BAND  Band)
 
 bool InfoScroll()
 {
-  byte buttonUp = LOW, buttonDown = LOW;
-  byte ExitButton = LOW; //  Resetto ExitButton
+  short buttonUp = LOW, buttonDown = LOW;
+  short ExitButton = LOW; //  Resetto ExitButton
   bool ExitInfo = false;
-  byte Page = MIN_INFO_PAGES;
-  byte numReg;
+  short Page = MIN_INFO_PAGES;
+  short numReg;
   String tmpEepromValue;
   String TimeStr, DateStr;
   

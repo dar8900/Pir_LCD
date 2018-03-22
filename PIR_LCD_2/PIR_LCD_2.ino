@@ -85,7 +85,7 @@ void LcdTimeWrite(int Time2Write)
 }
 
 // Utilizzano un oggetto di tipo LCD
-void LCDPrintString(byte row, byte col, String string) 
+void LCDPrintString(short row, short col, String string) 
 {
   if(col > MAX_LCD_COL || row > MAX_LCD_ROW || string.length() > 20) // ???
   {
@@ -115,7 +115,7 @@ void LCDPrintString(byte row, byte col, String string)
 
 }
 
-void LCDPrintValue(byte row, byte col, short value)
+void LCDPrintValue(short row, short col, short value)
 {
   String ValStr = String(value);
   if(col > MAX_LCD_COL || row > MAX_LCD_ROW || ValStr.length() > 20)
@@ -146,7 +146,7 @@ void LCDPrintValue(byte row, byte col, short value)
   lcd_main.print(ValStr);
 }
 
-void LCDPrintLineVoid(byte row)
+void LCDPrintLineVoid(short row)
 {
   lcd_main.setCursor(0, row);
   lcd_main.print("                    ");
@@ -162,10 +162,10 @@ void LCDDisplayOn()
 
 void MainSetup()
 {
-  byte buttonUp = LOW, buttonDown = LOW;
-  byte OkButton = LOW; //  Resetto ExitButton
+  short buttonUp = LOW, buttonDown = LOW;
+  short OkButton = LOW; //  Resetto ExitButton
   bool ExitSetup = false;
-  byte Page = MIN_MENU_PAGES;
+  short Page = MIN_MENU_PAGES;
   
   OFF(RED_LED);
   OFF(GREEN_LED);
@@ -226,7 +226,7 @@ void MainSetup()
 
 void InterruptFunc()
 {
-  byte timer = 6; // 0.1s c.a (105ms)
+  short timer = 6; // 0.1s c.a (105ms)
   while(timer > 0)
   {
     timer--;
@@ -276,7 +276,7 @@ void WriteHomeMsg()
 void gestionePIR(int analogPin)
 {
   short val = 0;
-  byte numReg;
+  short numReg;
   val = analogRead(analogPin);    
   val = (val *5)/1024;
   ClearLCD();
@@ -302,8 +302,8 @@ void gestionePIR(int analogPin)
 
 void ShowInfoMsg()
 {
-	byte InfoPressed = LOW;
-	byte timer = 6; // 0.06s c.a (60ms)
+	short InfoPressed = LOW;
+	short timer = 6; // 0.06s c.a (60ms)
 	String Time, Date;
     while(timer > 0)
     {
@@ -341,7 +341,7 @@ void ShowInfoMsg()
 
 
 // Blink del led per 5ms
-void BlinkLed(byte pin) 
+void BlinkLed(short pin) 
 {
   digitalWrite(pin, HIGH);
   delay(5);
@@ -350,7 +350,7 @@ void BlinkLed(byte pin)
 
 void setup()
 {
-  byte numReg;
+  short numReg;
   
   Serial.begin(9600);
   
@@ -385,7 +385,7 @@ void setup()
     }
 #endif
 	
-  lcd_main.begin(20,4);  
+  lcd_main.begin();  
   delay(1000);
   lcd_main.noBlink(); 
 
@@ -430,6 +430,7 @@ void loop()
   // PresentTime.minute = now.minute();
 	
   WriteHomeMsg();
+  ShowInfoMsg();
   if(FlagSetup)
   {
     MainSetup();

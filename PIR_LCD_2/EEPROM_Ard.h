@@ -22,6 +22,6 @@
 
 
 int WriteMemory(short address, short value);
-bool ReadMemory(short address, byte numReg, short *value);
+bool ReadMemory(short address, short numReg, short *value);
 
 #endif
