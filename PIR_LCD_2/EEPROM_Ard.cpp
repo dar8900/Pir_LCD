@@ -91,7 +91,7 @@ int WriteMemory(short address, short value)
 
 bool ReadMemory(short address, short numReg, short *value)
 {
-  int ValueRead;
+  int ValueRead = 0;
   short FlagValueBig = 0;
   bool ReadOk = false;
   if(address == START_DELAY_ADDR)
