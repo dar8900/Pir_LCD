@@ -7,9 +7,7 @@
 #define MIN_MENU_PAGES   0
 #define MAX_MENU_PAGES  sizeof(MainSetupItems)/sizeof(CREATE_MENU)
 
-
 #define MIN_INFO_PAGES  0
-#define MAX_INFO_PAGES  sizeof(EepromTab)/sizeof(EEPROM_ITEM)
 
 #define MAX_LCD_ROW    3
 #define MAX_LCD_COL   19
@@ -64,7 +62,8 @@ typedef enum
   DAY_BAND_1, 
   DAY_BAND_2, 
   MONTH_BAND_1, 
-  MONTH_BAND_2 
+  MONTH_BAND_2,
+  MAX_EEPROM_ITEM
  
 }EEPROM_ITEM_ENUM;
 
@@ -105,3 +104,6 @@ enum
   PIR_SWITCH,
   LIGHT_SWITCH
 };
+
+
+
