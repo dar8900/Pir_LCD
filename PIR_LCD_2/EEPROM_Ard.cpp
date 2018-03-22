@@ -14,37 +14,37 @@ int WriteMemory(int address, int value)
 {
   int FlagValueBig = 0;
   int numReg;
-  int resto = value % 255;
+  int resto = value % MAX_CELL_EEPROM;
 
-  if(address < 1025)
+  if(address < MAX_EEPROM_DIM)
   {
-    if((value / 255) == 0)
+    if((value / MAX_CELL_EEPROM) == 0)
     {
       numReg = 1;
       FlagValueBig = 0;
-      EEPROM.write(FLAG_VALUE_ADDR, FlagValueBig);
+      EEPROM.update(FLAG_VALUE_ADDR, FlagValueBig);
     }
-    else if((value / 255) == 1)
+    else if((value / MAX_CELL_EEPROM) == 1)
     {
-      if(value > 255)
+      if(value > MAX_CELL_EEPROM)
       {
-        numReg = (value / 255) + 1;
+        numReg = (value / MAX_CELL_EEPROM) + 1;
         FlagValueBig = 1;
-        EEPROM.write(FLAG_VALUE_ADDR, FlagValueBig);
+        EEPROM.update(FLAG_VALUE_ADDR, FlagValueBig);
       }
       else
       {
         numReg = 1;
         FlagValueBig = 0;
-        EEPROM.write(FLAG_VALUE_ADDR, FlagValueBig);
+        EEPROM.update(FLAG_VALUE_ADDR, FlagValueBig);
       }
     }
     else
     {
-      numReg = (value / 255) + 1;
+      numReg = (value / MAX_CELL_EEPROM) + 1;
       FlagValueBig = 1;
-      EEPROM.write(FLAG_VALUE_ADDR, FlagValueBig);
-      if(address + (numReg - 1) > 1025)
+      EEPROM.update(FLAG_VALUE_ADDR, FlagValueBig);
+      if(address + (numReg - 1) > MAX_EEPROM_DIM)
       {
         numReg = 0;
       }
@@ -52,7 +52,7 @@ int WriteMemory(int address, int value)
     
     for(int idx = 0; idx < numReg; idx++)
     {
-      if(address + (numReg - 1) > 1025)
+      if(numReg == 0)
       {
         break;
       }
@@ -62,7 +62,7 @@ int WriteMemory(int address, int value)
         {
           if(idx < numReg - 1)
           {
-            EEPROM.write(address + idx, 255);
+            EEPROM.write(address + idx, MAX_CELL_EEPROM);
           }
           else
           {
@@ -81,11 +81,10 @@ int WriteMemory(int address, int value)
     numReg = 0;
   }
 
-//  if(address == START_DELAY_ADDR)
-//  {
-//    EEPROM.write(NUM_REG_ADDR, numReg);
-//    
-//  }
+ if(address == START_DELAY_ADDR)
+ {
+   EEPROM.update(NUM_REG_ADDR, numReg);
+ }
   
   return  numReg;
 }
@@ -95,24 +94,42 @@ bool ReadMemory(int address, int numReg, int *value)
   int ValueRead;
   int FlagValueBig = 0;
   bool ReadOk = false;
-  FlagValueBig = EEPROM.read(FLAG_VALUE_ADDR);
-  
-  if(!FlagValueBig)
+  if(address == START_DELAY_ADDR)
   {
-     ValueRead = EEPROM.read(address);
-     ReadOk = true;      
+	  FlagValueBig = EEPROM.read(FLAG_VALUE_ADDR);
+	  
+	  if(!FlagValueBig)
+	  {
+		 ValueRead = EEPROM.read(address);
+		 ReadOk = true;      
+	  }
+	  else
+	  {
+		for(int idx = 0; idx < numReg; idx++)
+		{
+		  ValueRead += EEPROM.read(address + idx);      
+		}
+		ReadOk = true;
+	  }	  
   }
   else
   {
-    for(int idx = 0; idx < numReg; idx++)
-    {
-      ValueRead += EEPROM.read(address + idx);      
-    }
-    ReadOk = true;
+	ValueRead = EEPROM.read(address);
+	ReadOk = true;   	  
   }
+
   if(ReadOk)
   {
     *value = ValueRead;   
   }
   return ReadOk;
+}
+
+bool ClearMemory()
+{
+	// Tempo di cancellazione 3.3 s
+	for(int i = 0; i < MAX_EEPROM_DIM; i++)
+	{
+		EEPROM.update(i, 0);
+	}	
 }
