@@ -119,7 +119,6 @@ enum
   LIGHT_SWITCH
 };
 
-//int numReg;
 
 RTC_DS1307 RTC;
 
@@ -153,8 +152,8 @@ EEPROM_ITEM EepromTab[] =
   {BAND_INVALID_VALUE    	,  HOUR_BAND_2_ADDR       , 1,  "Hour band 2"   , TIME_BAND_NUM},
   {BAND_INVALID_VALUE       ,  MINUTE_BAND_1_ADDR     , 1,  "Minutes band 1", TIME_BAND_NUM},
   {BAND_INVALID_VALUE    	,  MINUTE_BAND_2_ADDR     , 1,  "Minutes band 2", TIME_BAND_NUM},
-  {BAND_INVALID_VALUE    	,  DAY_BAND_1_ADDR        , 1,  "Day band 1"   , TIME_BAND_NUM},
-  {BAND_INVALID_VALUE    	,  DAY_BAND_2_ADDR        , 1,  "Day band 2"   , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  DAY_BAND_1_ADDR        , 1,  "Day band 1"    , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  DAY_BAND_2_ADDR        , 1,  "Day band 2"    , TIME_BAND_NUM},
   {BAND_INVALID_VALUE    	,  MONTH_BAND_1_ADDR      , 1,  "Month band 1"   , TIME_BAND_NUM},
   {BAND_INVALID_VALUE    	,  MONTH_BAND_2_ADDR      , 1,  "Month band 2"   , TIME_BAND_NUM},
 };
@@ -701,7 +700,7 @@ bool ChangeTimeBands()
 		LCDPrintString(0, CENTER_ALIGN, "ERROR!");
 		LCDPrintString(1, CENTER_ALIGN, "Band 1 > Band 2");
 		LCDPrintString(2, CENTER_ALIGN, "Restore invalid");
-		LCDPrintString(2, CENTER_ALIGN, "band values");
+		LCDPrintString(3, CENTER_ALIGN, "band values");
 		SetBandInvalid();
 		delay(2000);
 		ClearLCD();
@@ -806,6 +805,7 @@ bool ChangeValue()
 {
   int buttonUp = 0, buttonDown = 0;
   bool OkButton = false;
+  int numReg;
   //ReadMemory(NUM_REG_ADDR, 1, &EepromTab[DELAY_AMOUNT].eeprom_par_numReg);
   ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
   Serial.println(EepromTab[DELAY_AMOUNT].eeprom_par_numReg);
@@ -821,7 +821,7 @@ bool ChangeValue()
   //  Resetto SetupOk
   SetupOk = LOW;
 
-  delay(2000);
+  delay(1000);
   // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di 
   // premere su setup per dare l'ok
   ClearLCD();
@@ -872,9 +872,10 @@ bool ChangeValue()
       if(oldDelayAmount != ChangeDelayAmount)
       {
         LCDPrintString(1,CENTER_ALIGN,"Value Saved!");
-        EepromTab[DELAY_AMOUNT].eeprom_par_numReg = WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, ChangeDelayAmount);
-        WriteMemory(NUM_REG_ADDR, EepromTab[DELAY_AMOUNT].eeprom_par_numReg);
-        Serial.println(EepromTab[DELAY_AMOUNT].eeprom_par_numReg);         
+        WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, ChangeDelayAmount);
+		ReadMemory(NUM_REG_ADDR, 1, &numReg);
+		ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &ChangeDelayAmount);
+        Serial.println(ChangeDelayAmount);         
       }
       else
       {
@@ -942,6 +943,7 @@ bool InfoScroll()
   int ExitButton = LOW; //  Resetto ExitButton
   bool ExitInfo = false;
   int Page = MIN_INFO_PAGES;
+  int numReg;
   String tmpEepromValue;
   String TimeStr, DateStr;
   
@@ -968,10 +970,14 @@ bool InfoScroll()
     delay(100);
     if(Page == DELAY_AMOUNT)
     {
-      ReadMemory(NUM_REG_ADDR, 1, &EepromTab[Page].eeprom_par_numReg);
-      Serial.println(EepromTab[Page].eeprom_par_numReg);
+      ReadMemory(NUM_REG_ADDR, 1, &numReg);
+	  ReadMemory(EepromTab[Page].eeprom_par_addr, numReg, &EepromTab[Page].eeprom_par_value);
+      Serial.println(EepromTab[Page].eeprom_par_value);
     }
-    ReadMemory(EepromTab[Page].eeprom_par_addr, EepromTab[Page].eeprom_par_numReg, &EepromTab[Page].eeprom_par_value);
+	else
+	{
+	  ReadMemory(EepromTab[Page].eeprom_par_addr, EepromTab[Page].eeprom_par_numReg, &EepromTab[Page].eeprom_par_value);	
+	}
    
     // Pulire LCD
     ClearLCD();
@@ -1102,6 +1108,7 @@ void WriteHomeMsg()
 void gestionePIR(int analogPin)
 {
   int val = 0;
+  int numReg;
   val = analogRead(analogPin);    
   val = (val *5)/1024;
   ClearLCD();
@@ -1111,8 +1118,8 @@ void gestionePIR(int analogPin)
     FlagBacklight = true;
     ON(GREEN_LED); 
     OFF(RED_LED);
-    ReadMemory(NUM_REG_ADDR , 1, &EepromTab[DELAY_AMOUNT].eeprom_par_numReg);
-    ReadMemory(START_DELAY_ADDR, EepromTab[DELAY_AMOUNT].eeprom_par_numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
+    ReadMemory(NUM_REG_ADDR , 1, &numReg);
+    ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
 	ON(LIGHT_SWITCH);
     LcdTimeWrite(EepromTab[DELAY_AMOUNT].eeprom_par_value);
 	OFF(LIGHT_SWITCH);
@@ -1175,6 +1182,8 @@ void BlinkLed(int pin)
 
 void setup()
 {
+  int numReg;
+  
   Serial.begin(9600);
   
   pinMode(BUTTON_UP, INPUT);
@@ -1200,6 +1209,11 @@ void setup()
 		Serial.println("RTC is NOT running!");
     // following line sets the RTC to the date & time this sketch was compiled
 		RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+		ON(YELLOW_LED);
+		ON(BLUE_LED);
+		delay(2000);
+		OFF(YELLOW_LED);
+		OFF(BLUE_LED);		
     }
   
   lcd_main.begin(20,4);  
@@ -1223,8 +1237,8 @@ void setup()
   //ReadBandFromEeprom();
   
   
-  //ReadMemory(NUM_REG_ADDR, 1, &EepromTab[DELAY_AMOUNT].eeprom_par_numReg); // Inizializzo il numero registri per il delay
-  ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
+  ReadMemory(NUM_REG_ADDR, 1, &numReg); // Inizializzo il numero registri per il delay
+  ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
   ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
  
   
