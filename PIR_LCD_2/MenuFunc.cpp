@@ -535,8 +535,10 @@ bool InfoScroll()
   short Page = MIN_INFO_PAGES;
   short numReg;
   String tmpEepromValue;
+#ifdef RTC_INSERTED
   String TimeStr, DateStr;
-  
+#endif 
+ 
   OFF(RED_LED);
   ON(GREEN_LED);
   ON(BLUE_LED);

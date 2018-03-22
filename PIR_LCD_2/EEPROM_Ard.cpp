@@ -14,7 +14,7 @@ int WriteMemory(short address, short value)
 {
   short FlagValueBig = 0;
   short numReg;
-  int resto = value % MAX_CELL_EEPROM;
+  short resto = value % MAX_CELL_EEPROM;
 
   if(address < MAX_EEPROM_DIM)
   {
@@ -50,7 +50,7 @@ int WriteMemory(short address, short value)
       }
     }
     
-    for(int idx = 0; idx < numReg; idx++)
+    for(short idx = 0; idx < numReg; idx++)
     {
       if(numReg == 0)
       {
@@ -91,7 +91,7 @@ int WriteMemory(short address, short value)
 
 bool ReadMemory(short address, short numReg, short *value)
 {
-  int ValueRead = 0;
+  short ValueRead = 0;
   short FlagValueBig = 0;
   bool ReadOk = false;
   if(address == START_DELAY_ADDR)
@@ -105,7 +105,7 @@ bool ReadMemory(short address, short numReg, short *value)
 	  }
 	  else
 	  {
-		for(int idx = 0; idx < numReg; idx++)
+		for(short idx = 0; idx < numReg; idx++)
 		{
 		  ValueRead += EEPROM.read(address + idx);      
 		}
@@ -128,7 +128,7 @@ bool ReadMemory(short address, short numReg, short *value)
 bool ClearMemory()
 {
 	// Tempo di cancellazione 3.3 s
-	for(int i = 0; i < MAX_EEPROM_DIM; i++)
+	for(short i = 0; i < MAX_EEPROM_DIM; i++)
 	{
 		EEPROM.update(i, 255);
 	}
@@ -139,7 +139,7 @@ bool IsMemoryEmpty()
 {
 	bool Empty = true;
 	short Value;
-	for(int i = 0; i < MAX_EEPROM_DIM; i++)
+	for(short i = 0; i < MAX_EEPROM_DIM; i++)
 	{
 		Value = EEPROM.read(i);
 		if(Value != 255)

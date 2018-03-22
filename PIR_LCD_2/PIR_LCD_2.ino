@@ -27,6 +27,7 @@ bool FlagShowInfo = 0;
 #ifdef RTC_INSERTED
 bool FlagBandOk = false;
 bool FlagAllBandsInvalid = false;
+DateTime now;
 #endif
 
 // bool ChangeDateTime(TIME_BAND  Band);
@@ -351,7 +352,6 @@ void BlinkLed(short pin)
 void setup()
 {
   short numReg;
-  bool MemoryEmpty;
   
   Serial.begin(9600);
   
@@ -390,39 +390,41 @@ void setup()
   delay(1000);
   lcd_main.noBlink(); 
 
-  /*
-	ANDREBBE SETTATO IL TEMPO E LA DATA CORRENTI NELLE VARIABILI GLOBALI
-	IN MODO CHE NON SI POSSA SUPERARE IL NUMERO DI GIORNI PER IL MESE CORRENTE
-	QUANDO USO LA FUNZIONE PER IL CAMBIAMENTO DI DATA
-	*/
-#ifdef RTC_INSERTED  
-  DateTime now = RTC.now();
-  PresentDate.day = now.day();
-  PresentDate.month = now.month();
-  PresentDate.year = now.year();
-  PresentTime.hour = now.hour();
-  PresentTime.minute = now.minute();
- 
-  SetBandInvalid(); // NON QUESTO MA SETTARE LE VARIABILI GLOBALI BAND_1 BAND_2 LEGGENDO DALLA MEMORIA 
-  //ReadBandFromEeprom();
- #endif 
   
-  MemoryEmpty = IsMemoryEmpty();
   
-  if(!MemoryEmpty)
+  if(!IsMemoryEmpty())
   {
 		ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg); // Inizializzo il numero registri per il delay
 		ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
 		ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);	  
+#ifdef RTC_INSERTED		
+		ReadBandFromEeprom();
+#endif
   }
   else
   {
+#ifdef RTC_INSERTED
+	    SetBandInvalid();
+		SaveBandToEeprom();
+#endif
 		WriteMemory(NUM_REG_ADDR, 1);
 		WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_value);
 		WriteMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_value);		
   }
 
- 
+   /*
+	ANDREBBE SETTATO IL TEMPO E LA DATA CORRENTI NELLE VARIABILI GLOBALI
+	IN MODO CHE NON SI POSSA SUPERARE IL NUMERO DI GIORNI PER IL MESE CORRENTE
+	QUANDO USO LA FUNZIONE PER IL CAMBIAMENTO DI DATA
+	*/
+#ifdef RTC_INSERTED  
+  now = RTC.now();
+  PresentDate.day = now.day();
+  PresentDate.month = now.month();
+  PresentDate.year = now.year();
+  PresentTime.hour = now.hour();
+  PresentTime.minute = now.minute();
+#endif 
   
   ClearLCD();
 
@@ -435,13 +437,14 @@ void setup()
 
 void loop()
 {
-  // now = RTC.now();
-  // PresentDate.day = now.day();
-  // PresentDate.month = now.month();
-  // PresentDate.year = now.year();
-  // PresentTime.hour = now.hour();
-  // PresentTime.minute = now.minute();
-	
+#ifdef RTC_INSERTED
+  now = RTC.now();
+  PresentDate.day = now.day();
+  PresentDate.month = now.month();
+  PresentDate.year = now.year();
+  PresentTime.hour = now.hour();
+  PresentTime.minute = now.minute();
+#endif
   WriteHomeMsg();
   ShowInfoMsg();
   if(FlagSetup)
