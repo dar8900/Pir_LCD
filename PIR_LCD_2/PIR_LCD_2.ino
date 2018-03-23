@@ -11,8 +11,8 @@
 LiquidCrystal_I2C lcd_main(0x27, 20,4);
 
 #ifdef RTC_INSERTED
-TIME_FOMAT PresentTime;  // Variabili per l'orario
-DATE_FOMAT PresentDate;  // Si perdono allo spegnimento ma vengono aggiornate subito all'accensione
+TIME_FORMAT PresentTime;  // Variabili per l'orario
+DATE_FORMAT PresentDate;  // Si perdono allo spegnimento ma vengono aggiornate subito all'accensione
 						 //	
 TIME_BAND Band_1, Band_2;//
 

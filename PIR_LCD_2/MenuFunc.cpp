@@ -6,8 +6,8 @@
 #ifdef RTC_INSERTED
 extern TIME_BAND Band_1;
 extern TIME_BAND Band_2;
-extern DATE_FOMAT PresentDate;
-extern TIME_FOMAT PresentTime;
+extern DATE_FORMAT PresentDate;
+extern TIME_FORMAT PresentTime;
 #endif
 
 extern EEPROM_ITEM EepromTab[];
@@ -234,8 +234,8 @@ bool ChangeDateTime(TIME_BAND  Band)
 {
   short buttonUp = LOW, buttonDown = LOW, OkTime = LOW;
   bool OkButton = false;
-  TIME_FOMAT ChangedTime;
-  DATE_FOMAT ChangedDate;
+  TIME_FORMAT ChangedTime;
+  DATE_FORMAT ChangedDate;
   ChangedTime = PresentTime;
   ChangedDate = PresentDate;
   ON(BLUE_LED);

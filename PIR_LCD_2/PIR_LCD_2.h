@@ -90,19 +90,19 @@ typedef struct
 {
 	short hour;
 	short minute;
-} TIME_FOMAT;
+} TIME_FORMAT;
 
 typedef struct
 {
 	short day;
 	short month;
 	short year;
-} DATE_FOMAT;
+} DATE_FORMAT;
 
 typedef struct
 {
-	TIME_FOMAT BandTime;
-	DATE_FOMAT BandDate;
+	TIME_FORMAT BandTime;
+	DATE_FORMAT BandDate;
 } TIME_BAND;
 #endif
 

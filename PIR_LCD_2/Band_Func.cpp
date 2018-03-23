@@ -5,8 +5,8 @@
 #ifdef RTC_INSERTED
 extern TIME_BAND Band_1;
 extern TIME_BAND Band_2;
-extern DATE_FOMAT PresentDate;
-extern TIME_FOMAT PresentTime;
+extern DATE_FORMAT PresentDate;
+extern TIME_FORMAT PresentTime;
 #endif
 
 extern EEPROM_ITEM EepromTab[];
