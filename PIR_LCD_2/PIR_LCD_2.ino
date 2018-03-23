@@ -90,11 +90,10 @@ void LCDPrintString(short row, short col, String string)
 {
   if(col > MAX_LCD_COL || row > MAX_LCD_ROW || string.length() > 20) // ???
   {
-    lcd_main.clear();
-    lcd_main.home();
-    lcd_main.print("OVER DIMENSION");
-    delay(2000);
-    return;
+	lcd_main.clear();
+	col = CENTER_ALIGN;
+	row = 3;
+    string = "OVER DIMENSION";   
   }
   switch(col)
   {
@@ -121,10 +120,10 @@ void LCDPrintValue(short row, short col, short value)
   String ValStr = String(value);
   if(col > MAX_LCD_COL || row > MAX_LCD_ROW || ValStr.length() > 20)
   {
-    lcd_main.clear();
-    lcd_main.home();
-    lcd_main.print("OVER DIMENSION");
-    delay(2000);
+	lcd_main.clear();
+	col = CENTER_ALIGN;
+	row = 3;
+    ValStr = "OVER DIMENSION"; 
     return;
   }
   
@@ -351,7 +350,8 @@ void BlinkLed(short pin)
 
 void setup()
 {
-  short numReg;
+  short numReg = 0;
+  short FirstStartCheck = 0;
   
   Serial.begin(9600);
   
@@ -391,17 +391,28 @@ void setup()
   lcd_main.noBlink(); 
 
   
-  
-  if(!IsMemoryEmpty())
+  ReadMemory(FIRST_START_CHECK_ADDR, 1, &FirstStartCheck);
+  if(FirstStartCheck == 255)
   {
-		ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg); // Inizializzo il numero registri per il delay
+	  WriteMemory(FIRST_START_CHECK_ADDR, 1);
+	  FirstStartCheck = 1;
+  }
+  else
+  {
+	  FirstStartCheck = 0;
+  }
+  
+  // Leggi dalla memoria perchè non è il primo avvio
+  if(FirstStartCheck == 0)
+  {
+		ReadMemory(NUM_REG_ADDR, 1, &numReg); // Inizializzo il numero registri per il delay
 		ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
 		ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);	  
 #ifdef RTC_INSERTED		
 		ReadBandFromEeprom();
 #endif
   }
-  else
+  else // Imposta i valori di default
   {
 #ifdef RTC_INSERTED
 	    SetBandInvalid();

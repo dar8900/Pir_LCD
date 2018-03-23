@@ -20,6 +20,7 @@
 #define FLAG_VALUE_ADDR                    50
 #define NUM_REG_ADDR                       51
 
+#define FIRST_START_CHECK_ADDR			  100
 
 int WriteMemory(short address, short value);
 bool ReadMemory(short address, short numReg, short *value);
