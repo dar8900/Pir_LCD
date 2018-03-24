@@ -63,6 +63,8 @@ bool ChangeValue()
   ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
   short oldDelayAmount = EepromTab[DELAY_AMOUNT].eeprom_par_value;
   short ChangeDelayAmount = EepromTab[DELAY_AMOUNT].eeprom_par_value;
+  String TimeOverSixty;
+  short Minute = 0, Second = 0;
 
   // Pulire LCD
   ClearLCD();
@@ -84,12 +86,33 @@ bool ChangeValue()
     SetupOk = digitalRead(BUTTON_SETUP);
     delay(60);
     // Pulire LCD
-    LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-    LCDPrintString(1,CENTER_ALIGN,"to change the value:");
-    LCDPrintLineVoid(2);
-    LCDPrintValue(2,8, ChangeDelayAmount);
-    LCDPrintString(2,11,"sec");
-    LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
+	if(ChangeDelayAmount <= 60)
+	{
+		LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
+		LCDPrintString(1,CENTER_ALIGN,"to change the value:");
+		LCDPrintLineVoid(2);
+		LCDPrintValue(2,8, ChangeDelayAmount);
+		LCDPrintString(2,11,"sec");
+		LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");		
+	}
+	else
+	{
+		Minute = ChangeDelayAmount / 60;
+		Second = ChangeDelayAmount % 60;
+		if(Second < 10)
+		{
+			TimeOverSixty = String(Minute) + ":0" + String(Second) + "min";	
+		}
+		else
+			TimeOverSixty = String(Minute) + ":" + String(Second) + "min";	
+		
+	    LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
+		LCDPrintString(1,CENTER_ALIGN,"to change the value:");
+		LCDPrintLineVoid(2);
+		LCDPrintString(2,CENTER_ALIGN, TimeOverSixty);
+		LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
+	}
+
     // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di 
     // premere su setup per dare l'ok
 
@@ -535,6 +558,7 @@ bool InfoScroll()
   short Page = MIN_INFO_PAGES;
   short numReg;
   String tmpEepromValue;
+  short Minute = 0, Second = 0;
 #ifdef RTC_INSERTED
   String TimeStr, DateStr;
 #endif 
@@ -591,11 +615,28 @@ bool InfoScroll()
 	}
 #endif
     else
-    {
-      tmpEepromValue = String(EepromTab[Page].eeprom_par_value);
-      tmpEepromValue = String(tmpEepromValue + "sec");
-      LCDPrintString(2, CENTER_ALIGN, tmpEepromValue);
-    }
+    {	
+		if(EepromTab[Page].eeprom_par_value <= 60)
+		{
+			tmpEepromValue = String(EepromTab[Page].eeprom_par_value);
+			tmpEepromValue = String(tmpEepromValue + "sec");
+			LCDPrintString(2, CENTER_ALIGN, tmpEepromValue);			
+			
+		}
+
+		else
+		{
+			Minute = EepromTab[Page].eeprom_par_value / 60;
+			Second = EepromTab[Page].eeprom_par_value % 60;
+			if(Second < 10)
+			{
+				tmpEepromValue = String(Minute) + ":0" + String(Second) + "min";	
+			}
+			else
+				tmpEepromValue = String(Minute) + ":" + String(Second) + "min";	
+			LCDPrintString(2, CENTER_ALIGN, tmpEepromValue);	
+		}
+	}
      
     if(buttonUp == HIGH)
     {

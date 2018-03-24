@@ -324,7 +324,7 @@ void ShowInfoMsg()
 		FlagBacklight = 1;
 		LCDPrintString(1, CENTER_ALIGN, "Press Setup/Ok");
 		LCDPrintString(2, CENTER_ALIGN, "for the menu");
-		delay(1000);
+		delay(2000);
 		ClearLCD();
 #ifdef RTC_INSERTED
 		LCDPrintString(0, CENTER_ALIGN, "Change the bands");
@@ -396,6 +396,9 @@ void setup()
   {
 	  WriteMemory(FIRST_START_CHECK_ADDR, 1);
 	  FirstStartCheck = 1;
+	  LCDPrintString(0,CENTER_ALIGN, "Default values");
+	  LCDPrintString(1, CENTER_ALIGN, "restored");
+	  delay(2000);
   }
   else
   {
