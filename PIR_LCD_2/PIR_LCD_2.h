@@ -115,7 +115,6 @@ enum
   GREEN_LED,
   BLUE_LED,
   YELLOW_LED,
-  PIR_SWITCH,
   LIGHT_SWITCH
 };
 

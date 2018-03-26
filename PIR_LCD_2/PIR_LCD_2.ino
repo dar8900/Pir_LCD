@@ -273,31 +273,41 @@ void WriteHomeMsg()
 
 }
 
-void gestionePIR(int analogPin)
+void gestionePIR(short StatePIR)
 {
   short val = 0;
   short numReg;
-  val = analogRead(analogPin);    
-  val = (val *5)/1024;
-  ClearLCD();
-  if(val > 0)
+  if(StatePIR == TURN_ON)
   {
-    lcd_main.backlight();
-    FlagBacklight = true;
-    ON(GREEN_LED); 
-    OFF(RED_LED);
-    ReadMemory(NUM_REG_ADDR , 1, (short*)&numReg);
-    ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
-	ON(LIGHT_SWITCH);
-    LcdTimeWrite(EepromTab[DELAY_AMOUNT].eeprom_par_value);
-	OFF(LIGHT_SWITCH);
+	  val = analogRead(AnalogPirPin);    
+	  val = (val *5)/1024;
+	  ClearLCD();
+	  if(val > 0)
+	  {
+		lcd_main.backlight();
+		FlagBacklight = true;
+		ON(GREEN_LED); 
+		OFF(RED_LED);
+		ReadMemory(NUM_REG_ADDR , 1, (short*)&numReg);
+		ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
+		ON(LIGHT_SWITCH);
+		LcdTimeWrite(EepromTab[DELAY_AMOUNT].eeprom_par_value);
+		OFF(LIGHT_SWITCH);
+		OFF(GREEN_LED);
+	  }
+	  else
+	  {
+		ON(RED_LED);
+		OFF(GREEN_LED);
+		OFF(LIGHT_SWITCH);
+	  } 
   }
   else
   {
-    ON(RED_LED);
-    OFF(GREEN_LED);
-	OFF(LIGHT_SWITCH);
-  } 
+	  OFF(GREEN_LED);
+	  OFF(RED_LED);
+  }
+  
 }
 
 void ShowInfoMsg()
@@ -362,10 +372,14 @@ void setup()
   pinMode(GREEN_LED, OUTPUT);
   pinMode(BLUE_LED, OUTPUT);
   pinMode(YELLOW_LED, OUTPUT);
-  pinMode(PIR_SWITCH, OUTPUT);
   pinMode(LIGHT_SWITCH, OUTPUT);
 
-#ifdef RTC_INSERTED
+	
+  lcd_main.begin();  
+  delay(1000);
+  lcd_main.noBlink(); 
+
+  #ifdef RTC_INSERTED
   if (!RTC.begin()) 
   {
     Serial.println("Couldn't find RTC");
@@ -385,11 +399,6 @@ void setup()
 		OFF(BLUE_LED);		
     }
 #endif
-	
-  lcd_main.begin();  
-  delay(1000);
-  lcd_main.noBlink(); 
-
   
   ReadMemory(FIRST_START_CHECK_ADDR, 1, &FirstStartCheck);
   if(FirstStartCheck == 255)
@@ -471,33 +480,17 @@ void loop()
 	// SPEGNERE IL SENSORE, ALTRIMENTI LASCIARE LA GESTIONE CHE C'è ORA
 #ifdef RTC_INSERTED
 	ChekBandValue();
+	ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, 1, &EepromTab[PIR_STATE].eeprom_par_value);
 	if(FlagBandOk)
 	{
-		if(EepromTab[PIR_STATE].eeprom_par_value == TURN_ON)
-		{
-			ON(PIR_SWITCH);
-			delay(150);
-			gestionePIR(AnalogPirPin);
-		}
-		else
-		{
-			OFF(PIR_SWITCH);
-		}  		
+		gestionePIR(EepromTab[PIR_STATE].eeprom_par_value);	
 	}
 	else
-		OFF(PIR_SWITCH);
+	{
+		gestionePIR(TURN_OFF);		
+	}
 #else
-	ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, 1, &EepromTab[PIR_STATE].eeprom_par_value);
-	if(EepromTab[PIR_STATE].eeprom_par_value == TURN_ON)
-	{
-		ON(PIR_SWITCH);
-		delay(150);
-		gestionePIR(AnalogPirPin);
-	}
-	else
-	{
-		OFF(PIR_SWITCH);
-	}
+	gestionePIR(EepromTab[PIR_STATE].eeprom_par_value);
 #endif  	
 
   }
