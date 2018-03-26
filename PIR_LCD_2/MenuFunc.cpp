@@ -104,8 +104,9 @@ bool ChangeValue()
 			TimeOverSixty = String(Minute) + ":0" + String(Second) + "min";	
 		}
 		else
+		{
 			TimeOverSixty = String(Minute) + ":" + String(Second) + "min";	
-		
+		}
 	    LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
 		LCDPrintString(1,CENTER_ALIGN,"to change the value:");
 		LCDPrintLineVoid(2);
