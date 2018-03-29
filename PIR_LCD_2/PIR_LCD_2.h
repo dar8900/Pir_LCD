@@ -25,7 +25,9 @@
 
 #define BAND_INVALID_VALUE 	99
 
-#define RTC_INSERTED
+#define BUTTON_PRESS_DELAY	50
+
+#undef RTC_INSERTED
 
 #ifdef RTC_INSERTED
 typedef enum
@@ -126,3 +128,9 @@ typedef struct
     bool AllBandsInvalid;
 } FLAGS;
 
+enum 
+{
+	UP = 0,
+	DOWN,
+	OK_EXIT
+};

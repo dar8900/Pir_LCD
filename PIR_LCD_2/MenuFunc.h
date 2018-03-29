@@ -12,12 +12,21 @@ enum
 	EXIT
 };
 
+enum
+{
+	CHANGE_BAND_1 = 0,
+	CHANGE_BAND_2,
+	CHEK_BAND,
+	EXIT_CHANGE_BAND	
+};
+
 void LCDPrintString(short row, short col, String string);
 void LCDPrintValue(short row, short col, short value);
 void LCDPrintLineVoid(short row);
 void LCDDisplayOn();
 void ClearLCD();
 void BlinkLed(short pin);
+short ChekButtons();
 
 bool EnterSetupButton();
 bool ChangeTimeBands();

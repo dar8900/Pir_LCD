@@ -24,18 +24,7 @@ FLAGS Flags;
 
 bool SetupOk = 0;
 
-// bool FlagBacklight = false;
-
-// bool FlagSetup = 0;
-// bool FlagShowInfo = 0;
-
-// #ifdef RTC_INSERTED
-// bool FlagBandOk = false;
-// bool FlagAllBandsInvalid = false;
-// DateTime now;
-// #endif
-
-// bool ChangeDateTime(TIME_BAND  Band);
+short buttonUp = LOW, buttonDown = LOW, OkButton = LOW;
 
 CREATE_MENU MainSetupItems[] = 
 {
@@ -75,7 +64,6 @@ void ClearLCD()
 void LcdTimeWrite(int Time2Write)
 {
   int cnt = Time2Write;
-  //String numero = String(cnt, DEC);
   while(cnt != 0)
   {
     LCDPrintValue(1, CENTER_ALIGN, cnt);
@@ -162,15 +150,30 @@ void LCDDisplayOn()
 	lcd_main.backlight();
 }
 
-
+short ChekButtons()
+{
+	short ButtonPress = 3;
+	buttonUp = LOW;
+	buttonDown = LOW;
+	OkButton = LOW;
+	buttonUp = digitalRead(BUTTON_UP);
+    buttonDown = digitalRead(BUTTON_DOWN);
+    OkButton = digitalRead(BUTTON_SETUP);
+	if(buttonUp == HIGH)
+		ButtonPress = UP;
+	if(buttonDown == HIGH)
+		ButtonPress = DOWN;
+	if(OkButton == HIGH)
+		ButtonPress = OK_EXIT;
+	return ButtonPress;
+}
 /************************ SETUP "RUNTIME" ******************************/
 
 void MainSetup()
 {
-  short buttonUp = LOW, buttonDown = LOW;
-  short OkButton = LOW; //  Resetto ExitButton
   bool ExitSetup = false;
   short Page = MIN_MENU_PAGES;
+  short ButtonPress;
   
   OFF(RED_LED);
   OFF(GREEN_LED);
@@ -187,46 +190,41 @@ void MainSetup()
   
   delay(2000);
   
-  while(1)
+  while(!ExitSetup)
   {
-    buttonUp = digitalRead(BUTTON_UP);
-    buttonDown = digitalRead(BUTTON_DOWN);
-    OkButton = digitalRead(BUTTON_SETUP);
-    delay(80);
+	ButtonPress = ChekButtons();
+    delay(BUTTON_PRESS_DELAY);
     // Pulire LCD
     ClearLCD();
     LCDPrintString(1, CENTER_ALIGN, MainSetupItems[Page].nameMenu);
     
-    if(buttonUp == HIGH)
-    {
-      BlinkLed(YELLOW_LED); // blink giallo
-      Page++;
-      if(Page >= MAX_MENU_PAGES) 
-      {
-        Page = MIN_MENU_PAGES;
-      }
-    }
-    if(buttonDown == HIGH)
-    {
-      BlinkLed(YELLOW_LED); // blink giallo
-      Page--;
-      if(Page < MIN_MENU_PAGES)
-      {
-        Page = MAX_MENU_PAGES-1;
-      }
-    }
-    if(OkButton == HIGH)
-    {
-      BlinkLed(YELLOW_LED); // blink giallo
-      ExitSetup = MainSetupItems[Page].MenuFunc();      
-    }
-    
-    if(ExitSetup)
-    {
-      OFF(BLUE_LED);
-      break;
-    }
+	switch(ButtonPress)
+	{
+		case UP:
+		    BlinkLed(YELLOW_LED); // blink giallo
+			Page++;
+			if(Page >= MAX_MENU_PAGES) 
+			{
+				Page = MIN_MENU_PAGES;
+			}
+			break;
+		case DOWN:
+		    BlinkLed(YELLOW_LED); // blink giallo
+			Page--;
+			if(Page < MIN_MENU_PAGES)
+			{
+				Page = MAX_MENU_PAGES-1;
+			}
+			break;
+		case OK_EXIT:
+		    BlinkLed(YELLOW_LED); // blink giallo
+			ExitSetup = MainSetupItems[Page].MenuFunc();      
+			break;
+		default:
+			break;	
+	}
   }
+  OFF(BLUE_LED);
 }
 
 void InterruptFunc()
