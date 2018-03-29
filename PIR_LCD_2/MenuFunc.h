@@ -3,6 +3,15 @@
 
 #include <Arduino.h>
 
+enum
+{
+	CHANGE_HOUR = 0,
+	CHANGE_MINUTE,
+	CHANGE_DAY,
+	CHANGE_MONTH,
+	EXIT
+};
+
 void LCDPrintString(short row, short col, String string);
 void LCDPrintValue(short row, short col, short value);
 void LCDPrintLineVoid(short row);

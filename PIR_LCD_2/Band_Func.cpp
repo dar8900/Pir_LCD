@@ -10,8 +10,9 @@ extern TIME_FORMAT PresentTime;
 #endif
 
 extern EEPROM_ITEM EepromTab[];
-extern bool FlagBandOk;
-extern bool FlagAllBandsInvalid;
+// extern bool FlagBandOk;
+// extern bool FlagAllBandsInvalid;
+extern FLAGS Flags;
 
 #ifdef RTC_INSERTED
 void SaveBandToEeprom()
@@ -29,14 +30,14 @@ void SaveBandToEeprom()
 
 void ReadBandFromEeprom()
 {
-    ReadMemory(EepromTab[HOUR_BAND_1].eeprom_par_addr	, EepromTab[HOUR_BAND_1].eeprom_par_numReg	, (short*)&(Band_1.BandTime.hour));
-	ReadMemory(EepromTab[HOUR_BAND_2].eeprom_par_addr	, EepromTab[HOUR_BAND_2].eeprom_par_numReg	, (short*)&(Band_2.BandTime.hour));
-	ReadMemory(EepromTab[MINUTE_BAND_1].eeprom_par_addr , EepromTab[MINUTE_BAND_1].eeprom_par_numReg, (short*)&(Band_1.BandTime.minute));
-	ReadMemory(EepromTab[MINUTE_BAND_2].eeprom_par_addr , EepromTab[MINUTE_BAND_2].eeprom_par_numReg, (short*)&(Band_2.BandTime.minute));
-	ReadMemory(EepromTab[DAY_BAND_1].eeprom_par_addr	, EepromTab[DAY_BAND_1].eeprom_par_numReg	, (short*)&(Band_1.BandDate.day));
-	ReadMemory(EepromTab[DAY_BAND_2].eeprom_par_addr	, EepromTab[DAY_BAND_2].eeprom_par_numReg	, (short*)&(Band_2.BandDate.day));
-	ReadMemory(EepromTab[MONTH_BAND_1].eeprom_par_addr	, EepromTab[MONTH_BAND_1].eeprom_par_numReg	, (short*)&(Band_1.BandDate.month));
-	ReadMemory(EepromTab[MONTH_BAND_2].eeprom_par_addr	, EepromTab[MONTH_BAND_2].eeprom_par_numReg	, (short*)&(Band_2.BandDate.month));	
+    ReadMemory(EepromTab[HOUR_BAND_1].eeprom_par_addr	, EepromTab[HOUR_BAND_1].eeprom_par_numReg	, Band_1.BandTime.hour);
+	ReadMemory(EepromTab[HOUR_BAND_2].eeprom_par_addr	, EepromTab[HOUR_BAND_2].eeprom_par_numReg	, Band_2.BandTime.hour);
+	ReadMemory(EepromTab[MINUTE_BAND_1].eeprom_par_addr , EepromTab[MINUTE_BAND_1].eeprom_par_numReg, Band_1.BandTime.minute);
+	ReadMemory(EepromTab[MINUTE_BAND_2].eeprom_par_addr , EepromTab[MINUTE_BAND_2].eeprom_par_numReg, Band_2.BandTime.minute);
+	ReadMemory(EepromTab[DAY_BAND_1].eeprom_par_addr	, EepromTab[DAY_BAND_1].eeprom_par_numReg	, Band_1.BandDate.day);
+	ReadMemory(EepromTab[DAY_BAND_2].eeprom_par_addr	, EepromTab[DAY_BAND_2].eeprom_par_numReg	, Band_2.BandDate.day);
+	ReadMemory(EepromTab[MONTH_BAND_1].eeprom_par_addr	, EepromTab[MONTH_BAND_1].eeprom_par_numReg	, Band_1.BandDate.month);
+	ReadMemory(EepromTab[MONTH_BAND_2].eeprom_par_addr	, EepromTab[MONTH_BAND_2].eeprom_par_numReg	, Band_2.BandDate.month);	
 	return;
 }
 
@@ -48,7 +49,7 @@ void ChekBandValue()
 	   Band_2.BandTime.hour == BAND_INVALID_VALUE || Band_2.BandTime.minute == BAND_INVALID_VALUE || Band_2.BandDate.day == BAND_INVALID_VALUE || Band_2.BandDate.month == BAND_INVALID_VALUE)
 	   {
 		   InvalidBand = true;
-		   FlagBandOk = false;
+		   Flags.BandOk = false;
 		   SetBandInvalid();	   
 	   }
 	if(!InvalidBand)
@@ -56,11 +57,11 @@ void ChekBandValue()
 		if((PresentTime.hour >= Band_1.BandTime.hour && PresentTime.hour <= Band_2.BandTime.hour) && (PresentTime.minute >= Band_1.BandTime.minute && PresentTime.minute <= Band_2.BandTime.minute) &&
 		   (PresentDate.day >= Band_1.BandDate.day && PresentDate.day <= Band_2.BandDate.day) && (PresentDate.month >= Band_1.BandDate.month && PresentDate.month <= Band_2.BandDate.month))
 		{
-		   FlagBandOk = true;
+		   Flags.BandOk = true;
 		}
 		else
 		{
-		   FlagBandOk = false;
+		   Flags.BandOk = false;
 		}		
 	}
 }
@@ -75,6 +76,6 @@ void SetBandInvalid()
   Band_2.BandTime.minute = BAND_INVALID_VALUE;
   Band_2.BandDate.day = BAND_INVALID_VALUE;
   Band_2.BandDate.month = BAND_INVALID_VALUE;	
-  FlagAllBandsInvalid = true;
+  Flags.AllBandsInvalid = true;
 }
 #endif

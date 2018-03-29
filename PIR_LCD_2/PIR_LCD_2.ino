@@ -17,28 +17,33 @@ DATE_FORMAT PresentDate;  // Si perdono allo spegnimento ma vengono aggiornate s
 TIME_BAND Band_1, Band_2;//
 
 RTC_DS1307 RTC;
-#endif
-
-bool FlagBacklight = false;
-bool SetupOk = 0;
-bool FlagSetup = 0;
-bool FlagShowInfo = 0;
-
-#ifdef RTC_INSERTED
-bool FlagBandOk = false;
-bool FlagAllBandsInvalid = false;
 DateTime now;
 #endif
+
+FLAGS Flags;
+
+bool SetupOk = 0;
+
+// bool FlagBacklight = false;
+
+// bool FlagSetup = 0;
+// bool FlagShowInfo = 0;
+
+// #ifdef RTC_INSERTED
+// bool FlagBandOk = false;
+// bool FlagAllBandsInvalid = false;
+// DateTime now;
+// #endif
 
 // bool ChangeDateTime(TIME_BAND  Band);
 
 CREATE_MENU MainSetupItems[] = 
 {
-  {"Change light delay", CHANGE_VALUE , ChangeValue		},
-  {"Change PIR state"  , SWITCH_STATE , SwichState 		},
-  {"Show Info"         , INFO         , InfoScroll      },
+  {"Change light delay", ChangeValue		},
+  {"Change PIR state"  , SwichState 		},
+  {"Show Info"         , InfoScroll         },
 #ifdef RTC_INSERTED
-  {"Change Time Bands" , TIME_BAND_NUM, ChangeTimeBands },
+  {"Change Time Bands" , ChangeTimeBands    },
 #endif
 };
 
@@ -172,7 +177,7 @@ void MainSetup()
   ON(BLUE_LED);
   lcd_main.backlight();
   
-  FlagBacklight = true;
+  Flags.Backlight = true;
 
   // Pulire LCD
   ClearLCD();
@@ -239,7 +244,7 @@ void InterruptFunc()
 
 void WriteHomeMsg()
 {
-  if(FlagBacklight && !FlagShowInfo)
+  if(Flags.Backlight && !Flags.ShowInfo)
   {
     LCDPrintString(1,CENTER_ALIGN,"Press on Enter/Ok");
     LCDPrintString(2,CENTER_ALIGN,"for enter in");
@@ -254,15 +259,15 @@ void WriteHomeMsg()
     LCDPrintString(2,CENTER_ALIGN,"for Help info"); 
     delay(2000);
     EnterSetupButton();           
-    FlagBacklight = false;
+    Flags.Backlight = false;
     lcd_main.noBacklight(); 
     ClearLCD();
   }
-  else if(FlagBacklight && FlagShowInfo)
+  else if(Flags.Backlight && Flags.ShowInfo)
   {
-	FlagShowInfo = 0;
+	Flags.ShowInfo = 0;
 	EnterSetupButton();           
-    FlagBacklight = false;
+    Flags.Backlight = false;
     lcd_main.noBacklight(); 
     ClearLCD();
   }
@@ -285,7 +290,7 @@ void gestionePIR(short StatePIR)
 	  if(val > 0)
 	  {
 		lcd_main.backlight();
-		FlagBacklight = true;
+		Flags.Backlight = true;
 		ON(GREEN_LED); 
 		OFF(RED_LED);
 		ReadMemory(NUM_REG_ADDR , 1, (short*)&numReg);
@@ -315,6 +320,10 @@ void ShowInfoMsg()
 	short InfoPressed = LOW;
 	short timer = 6; // 0.06s c.a (60ms)
 	String Time, Date;
+#ifdef RTC_INSERTED
+	Time = String(PresentTime.hour) + ":" + String(PresentTime.minute);
+	Date = String(PresentDate.day) + "/" + String(PresentDate.month);
+#endif
     while(timer > 0)
     {
 		timer--;
@@ -322,16 +331,16 @@ void ShowInfoMsg()
 		if(InfoPressed == HIGH)
 		{
 			InfoPressed = LOW;
-			FlagShowInfo = 1;
+			Flags.ShowInfo = 1;
 			break;
 		}	
-		FlagShowInfo = 0;		
+		Flags.ShowInfo = 0;		
 		delay(10);
 	}	
-	if(FlagShowInfo)
+	if(Flags.ShowInfo)
 	{
 		lcd_main.backlight();
-		FlagBacklight = 1;
+		Flags.Backlight = true;
 		LCDPrintString(1, CENTER_ALIGN, "Press Setup/Ok");
 		LCDPrintString(2, CENTER_ALIGN, "for the menu");
 		delay(2000);
@@ -341,6 +350,10 @@ void ShowInfoMsg()
 		LCDPrintString(1, CENTER_ALIGN, "to set when");
 		LCDPrintString(2, CENTER_ALIGN, "turn ON");
 		LCDPrintString(2, CENTER_ALIGN, "the sensor");
+		delay(3000);
+		ClearLCD();
+	    LCDPrintString(1, CENTER_ALIGN, Time);
+		LCDPrintString(2, CENTER_ALIGN, Date);
 		delay(3000);
 		ClearLCD();
 #endif
@@ -363,6 +376,12 @@ void setup()
   short numReg = 0;
   short FirstStartCheck = 0;
   
+  Flags.Backlight = false;
+  Flags.Setup = false;
+  Flags.ShowInfo = false;
+  Flags.BandOk = false;
+  Flags.AllBandsInvalid = false;
+  
   Serial.begin(9600);
   
   pinMode(BUTTON_UP, INPUT);
@@ -382,22 +401,28 @@ void setup()
   #ifdef RTC_INSERTED
   if (!RTC.begin()) 
   {
-    Serial.println("Couldn't find RTC");
     BlinkLed(YELLOW_LED);
+	BlinkLed(RED_LED);
     while (1);
   }
   
-    if (!RTC.isrunning()) 
-	{
-		Serial.println("RTC is NOT running!");
-    // following line sets the RTC to the date & time this sketch was compiled
-		RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
-		ON(YELLOW_LED);
-		ON(BLUE_LED);
-		delay(2000);
-		OFF(YELLOW_LED);
-		OFF(BLUE_LED);		
-    }
+  if (!RTC.isrunning()) 
+  {
+	lcd_main.backlight();
+	ClearLCD();
+	LCDPrintString(0, CENTER_ALIGN, "RTC NOT running!");
+	delay(1000);
+  // following line sets the RTC to the date & time this sketch was compiled
+  	RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  	ON(YELLOW_LED);
+  	ON(BLUE_LED);
+	ClearLCD();
+	LCDPrintString(0, CENTER_ALIGN, "Setting the time");
+  	delay(2000);
+  	OFF(YELLOW_LED);
+  	OFF(BLUE_LED);	
+    lcd_main.noBacklight();	
+  }
 #endif
   
   ReadMemory(FIRST_START_CHECK_ADDR, 1, &FirstStartCheck);
@@ -464,13 +489,12 @@ void loop()
   now = RTC.now();
   PresentDate.day = now.day();
   PresentDate.month = now.month();
-  PresentDate.year = now.year();
   PresentTime.hour = now.hour();
   PresentTime.minute = now.minute();
 #endif
   WriteHomeMsg();
   ShowInfoMsg();
-  if(FlagSetup)
+  if(Flags.Setup)
   {
     MainSetup();
   }
@@ -480,8 +504,7 @@ void loop()
 	// SPEGNERE IL SENSORE, ALTRIMENTI LASCIARE LA GESTIONE CHE C'è ORA
 #ifdef RTC_INSERTED
 	ChekBandValue();
-	ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, 1, &EepromTab[PIR_STATE].eeprom_par_value);
-	if(FlagBandOk)
+	if(Flags.BandOk)
 	{
 		gestionePIR(EepromTab[PIR_STATE].eeprom_par_value);	
 	}

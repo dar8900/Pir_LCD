@@ -25,7 +25,7 @@
 
 #define BAND_INVALID_VALUE 	99
 
-#undef RTC_INSERTED
+#define RTC_INSERTED
 
 #ifdef RTC_INSERTED
 typedef enum
@@ -47,7 +47,6 @@ typedef enum
 typedef struct
 {
   String nameMenu;
-  MENU_TYPE_NBR typeMenu;
   bool (*MenuFunc)(void);
 } CREATE_MENU;
 
@@ -118,5 +117,12 @@ enum
   LIGHT_SWITCH
 };
 
-
+typedef struct
+{
+	bool Backlight;
+	bool Setup;
+	bool ShowInfo;
+    bool BandOk;
+    bool AllBandsInvalid;
+} FLAGS;
 
