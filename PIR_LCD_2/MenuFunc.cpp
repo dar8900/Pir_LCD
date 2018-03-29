@@ -508,7 +508,6 @@ bool ChangeDateTime(TIME_BAND  Band)
 bool InfoScroll()
 {
   short ButtonPress;
-  short ExitButton = LOW; //  Resetto ExitButton
   bool ExitInfo = false;
   short Page = MIN_INFO_PAGES;
   short numReg;
