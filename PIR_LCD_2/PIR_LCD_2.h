@@ -25,6 +25,7 @@
 
 #define BAND_INVALID_VALUE 	99
 
+#define NO_BUTTON_PRESS      3
 #define BUTTON_PRESS_DELAY	50
 
 #undef RTC_INSERTED

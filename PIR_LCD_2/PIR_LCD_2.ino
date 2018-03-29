@@ -22,7 +22,6 @@ DateTime now;
 
 FLAGS Flags;
 
-bool SetupOk = 0;
 
 short buttonUp = LOW, buttonDown = LOW, OkButton = LOW;
 
@@ -152,7 +151,7 @@ void LCDDisplayOn()
 
 short ChekButtons()
 {
-	short ButtonPress = 3;
+	short ButtonPress = NO_BUTTON_PRESS;
 	buttonUp = LOW;
 	buttonDown = LOW;
 	OkButton = LOW;
@@ -256,7 +255,7 @@ void WriteHomeMsg()
     LCDPrintString(1,CENTER_ALIGN,"Press Up");
     LCDPrintString(2,CENTER_ALIGN,"for Help info"); 
     delay(2000);
-    EnterSetupButton();           
+    Flags.Setup = false;           
     Flags.Backlight = false;
     lcd_main.noBacklight(); 
     ClearLCD();
@@ -264,7 +263,7 @@ void WriteHomeMsg()
   else if(Flags.Backlight && Flags.ShowInfo)
   {
 	Flags.ShowInfo = 0;
-	EnterSetupButton();           
+	Flags.Setup = false;           
     Flags.Backlight = false;
     lcd_main.noBacklight(); 
     ClearLCD();

@@ -13,7 +13,6 @@ extern TIME_FORMAT PresentTime;
 extern EEPROM_ITEM EepromTab[];
 
 extern FLAGS  Flags;
-extern bool SetupOk;
 
 static const String OnOff[2] = {"On", "Off"};
 
@@ -37,7 +36,7 @@ static const short TabDays4Month[] =
 
 bool EnterSetupButton()
 {
-  SetupOk = digitalRead(BUTTON_SETUP);
+  short SetupOk = digitalRead(BUTTON_SETUP);
   if(SetupOk == HIGH)
   {
     BlinkLed(YELLOW_LED);
