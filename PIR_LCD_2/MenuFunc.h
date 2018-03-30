@@ -20,6 +20,15 @@ enum
 	EXIT_CHANGE_BAND	
 };
 
+enum
+{
+	BAND_1 = 1,
+	BAND_2
+	
+};
+
+
+
 void LCDPrintString(short row, short col, String string);
 void LCDPrintValue(short row, short col, short value);
 void LCDPrintLineVoid(short row);

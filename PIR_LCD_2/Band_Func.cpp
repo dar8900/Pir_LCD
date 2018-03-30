@@ -45,14 +45,14 @@ void ChekBandValue()
 {
 	bool InvalidBand = false;
 	
-	if(Band_1.BandTime.hour == BAND_INVALID_VALUE || Band_1.BandTime.minute == BAND_INVALID_VALUE || Band_1.BandDate.day == BAND_INVALID_VALUE ||  Band_1.BandDate.month== BAND_INVALID_VALUE ||
-	   Band_2.BandTime.hour == BAND_INVALID_VALUE || Band_2.BandTime.minute == BAND_INVALID_VALUE || Band_2.BandDate.day == BAND_INVALID_VALUE || Band_2.BandDate.month == BAND_INVALID_VALUE)
-	   {
-		   InvalidBand = true;
-		   Flags.BandOk = false;
-		   SetBandInvalid();	   
-	   }
-	if(!InvalidBand)
+	// if(Band_1.BandTime.hour == BAND_INVALID_VALUE || Band_1.BandTime.minute == BAND_INVALID_VALUE || Band_1.BandDate.day == BAND_INVALID_VALUE ||  Band_1.BandDate.month== BAND_INVALID_VALUE ||
+	   // Band_2.BandTime.hour == BAND_INVALID_VALUE || Band_2.BandTime.minute == BAND_INVALID_VALUE || Band_2.BandDate.day == BAND_INVALID_VALUE || Band_2.BandDate.month == BAND_INVALID_VALUE)
+	   // {
+		   // InvalidBand = true;
+		   // Flags.BandOk = false;
+		   // SetBandInvalid();	   
+	   // }
+	if(!Flags.AllBandsInvalid)
 	{
 		if((PresentTime.hour >= Band_1.BandTime.hour && PresentTime.hour <= Band_2.BandTime.hour) && (PresentTime.minute >= Band_1.BandTime.minute && PresentTime.minute <= Band_2.BandTime.minute) &&
 		   (PresentDate.day >= Band_1.BandDate.day && PresentDate.day <= Band_2.BandDate.day) && (PresentDate.month >= Band_1.BandDate.month && PresentDate.month <= Band_2.BandDate.month))

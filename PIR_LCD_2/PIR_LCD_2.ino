@@ -40,14 +40,14 @@ EEPROM_ITEM EepromTab[] =
   {MIN_LIGHT_DELAY			,  START_DELAY_ADDR       , 1,  "Light delay"   , CHANGE_VALUE},
   {TURN_OFF					,  SWITCH_PIR_ADDR        , 1,  "PIR state"     , SWITCH_STATE},
 #ifdef RTC_INSERTED
-  {BAND_INVALID_VALUE       ,  HOUR_BAND_1_ADDR       , 1,  "Hour band 1"   , TIME_BAND_NUM},
-  {BAND_INVALID_VALUE    	,  HOUR_BAND_2_ADDR       , 1,  "Hour band 2"   , TIME_BAND_NUM},
-  {BAND_INVALID_VALUE       ,  MINUTE_BAND_1_ADDR     , 1,  "Minutes band 1", TIME_BAND_NUM},
-  {BAND_INVALID_VALUE    	,  MINUTE_BAND_2_ADDR     , 1,  "Minutes band 2", TIME_BAND_NUM},
-  {BAND_INVALID_VALUE    	,  DAY_BAND_1_ADDR        , 1,  "Day band 1"    , TIME_BAND_NUM},
-  {BAND_INVALID_VALUE    	,  DAY_BAND_2_ADDR        , 1,  "Day band 2"    , TIME_BAND_NUM},
-  {BAND_INVALID_VALUE    	,  MONTH_BAND_1_ADDR      , 1,  "Month band 1"   , TIME_BAND_NUM},
-  {BAND_INVALID_VALUE    	,  MONTH_BAND_2_ADDR      , 1,  "Month band 2"   , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE       ,  HOUR_BAND_1_ADDR       , 1,  ""   , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  HOUR_BAND_2_ADDR       , 1,  ""   , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE       ,  MINUTE_BAND_1_ADDR     , 1,  ""   , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  MINUTE_BAND_2_ADDR     , 1,  ""   , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  DAY_BAND_1_ADDR        , 1,  ""    , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  DAY_BAND_2_ADDR        , 1,  ""    , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  MONTH_BAND_1_ADDR      , 1,  ""   , TIME_BAND_NUM},
+  {BAND_INVALID_VALUE    	,  MONTH_BAND_2_ADDR      , 1,  ""   , TIME_BAND_NUM},
 #endif
 };
 
@@ -93,7 +93,7 @@ void LCDPrintString(short row, short col, String string)
       col = ((MAX_LCD_COL+1) - string.length()) / 2;
       break;
     case RIGHT_ALIGN:
-      col = MAX_LCD_COL - string.length();
+      col = (MAX_LCD_COL+1) - string.length();
       break;
     case LEFT_ALIGN:
       col = 0;
@@ -125,7 +125,7 @@ void LCDPrintValue(short row, short col, short value)
       col = ((MAX_LCD_COL+1) - ValStr.length()) / 2;
       break;
     case RIGHT_ALIGN:
-      col = MAX_LCD_COL - ValStr.length();
+      col = (MAX_LCD_COL+1) - ValStr.length();
       break;
     case LEFT_ALIGN:
       col = 0;
@@ -346,7 +346,7 @@ void ShowInfoMsg()
 		LCDPrintString(0, CENTER_ALIGN, "Change the bands");
 		LCDPrintString(1, CENTER_ALIGN, "to set when");
 		LCDPrintString(2, CENTER_ALIGN, "turn ON");
-		LCDPrintString(2, CENTER_ALIGN, "the sensor");
+		LCDPrintString(3, CENTER_ALIGN, "the sensor");
 		delay(3000);
 		ClearLCD();
 	    LCDPrintString(1, CENTER_ALIGN, Time);
@@ -395,30 +395,30 @@ void setup()
   delay(1000);
   lcd_main.noBlink(); 
 
-  #ifdef RTC_INSERTED
+#ifdef RTC_INSERTED
   if (!RTC.begin()) 
   {
     BlinkLed(YELLOW_LED);
 	BlinkLed(RED_LED);
-    while (1);
+    //while (1);
   }
   
   if (!RTC.isrunning()) 
   {
-	lcd_main.backlight();
-	ClearLCD();
-	LCDPrintString(0, CENTER_ALIGN, "RTC NOT running!");
-	delay(1000);
-  // following line sets the RTC to the date & time this sketch was compiled
-  	RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  	ON(YELLOW_LED);
-  	ON(BLUE_LED);
-	ClearLCD();
-	LCDPrintString(0, CENTER_ALIGN, "Setting the time");
-  	delay(2000);
-  	OFF(YELLOW_LED);
-  	OFF(BLUE_LED);	
-    lcd_main.noBacklight();	
+	// lcd_main.backlight();
+	// ClearLCD();
+	// LCDPrintString(0, CENTER_ALIGN, "RTC NOT running!");
+	// delay(1000);
+  // // following line sets the RTC to the date & time this sketch was compiled
+  	// //RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  	// ON(YELLOW_LED);
+  	// ON(BLUE_LED);
+	// ClearLCD();
+	// LCDPrintString(0, CENTER_ALIGN, "Setting the time");
+  	// delay(2000);
+  	// OFF(YELLOW_LED);
+  	// OFF(BLUE_LED);	
+    // lcd_main.noBacklight();	
   }
 #endif
   
@@ -463,16 +463,20 @@ void setup()
 	QUANDO USO LA FUNZIONE PER IL CAMBIAMENTO DI DATA
 	*/
 #ifdef RTC_INSERTED  
-  now = RTC.now();
-  PresentDate.day = now.day();
-  PresentDate.month = now.month();
-  PresentDate.year = now.year();
-  PresentTime.hour = now.hour();
-  PresentTime.minute = now.minute();
+  // now = RTC.now();
+  // PresentDate.day = now.day();
+  // PresentDate.month = now.month();
+  // PresentDate.year = now.year();
+  // PresentTime.hour = now.hour();
+  // PresentTime.minute = now.minute();
+  PresentDate.day = 29;
+  PresentDate.month = 03;
+  PresentTime.hour = 18;
+  PresentTime.minute = 50;
 #endif 
   
   ClearLCD();
-
+  
   InfoScroll();
   
   delay(1000);
@@ -483,11 +487,11 @@ void setup()
 void loop()
 {
 #ifdef RTC_INSERTED
-  now = RTC.now();
-  PresentDate.day = now.day();
-  PresentDate.month = now.month();
-  PresentTime.hour = now.hour();
-  PresentTime.minute = now.minute();
+  // now = RTC.now();
+  // PresentDate.day = now.day();
+  // PresentDate.month = now.month();
+  // PresentTime.hour = now.hour();
+  // PresentTime.minute = now.minute();
 #endif
   WriteHomeMsg();
   ShowInfoMsg();

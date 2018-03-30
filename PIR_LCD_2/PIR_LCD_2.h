@@ -28,7 +28,7 @@
 #define NO_BUTTON_PRESS      3
 #define BUTTON_PRESS_DELAY	50
 
-#undef RTC_INSERTED
+#define RTC_INSERTED
 
 #ifdef RTC_INSERTED
 typedef enum
