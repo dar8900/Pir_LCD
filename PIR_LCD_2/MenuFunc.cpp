@@ -615,11 +615,26 @@ bool InfoScroll()
 		// Info sulle bande
 		if(Page >= HOUR_BAND_1 && Page <= MONTH_BAND_2)
 		{
-			TimeStr = String(Band_1.BandTime.hour) + ":" + String(Band_1.BandTime.minute);
+			if(Band_1.BandTime.minute < 10)
+			{
+				TimeStr = String(Band_1.BandTime.hour) + ":" + "0" + String(Band_1.BandTime.minute);
+			}
+			else
+			{
+				TimeStr = String(Band_1.BandTime.hour) + ":" + String(Band_1.BandTime.minute);	
+			}
 			DateStr = String(Band_1.BandDate.day) + "/" + String(Band_1.BandDate.month);
 			LCDPrintString(0, CENTER_ALIGN, "Band 1 Time Set:");
 			LCDPrintString(1, LEFT_ALIGN, TimeStr);
 			LCDPrintString(1, RIGHT_ALIGN, DateStr);
+			if(Band_2.BandTime.minute < 10)
+			{
+				TimeStr = String(Band_2.BandTime.hour) + ":" + "0" + String(Band_2.BandTime.minute);
+			}
+			else
+			{
+				TimeStr = String(Band_2.BandTime.hour) + ":" + String(Band_2.BandTime.minute);	
+			}
 			TimeStr = String(Band_2.BandTime.hour) + ":" + String(Band_2.BandTime.minute);
 			DateStr = String(Band_2.BandDate.day) + "/" + String(Band_2.BandDate.month);
 			LCDPrintString(2, CENTER_ALIGN, "Band 2 Time Set:");

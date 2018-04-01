@@ -282,6 +282,7 @@ void gestionePIR(short StatePIR)
   if(StatePIR == TURN_ON)
   {
 	  val = analogRead(AnalogPirPin);    
+	  Serial.println(val);
 	  val = (val *5)/1024;
 	  ClearLCD();
 	  if(val > 0)
@@ -297,7 +298,7 @@ void gestionePIR(short StatePIR)
 		OFF(LIGHT_SWITCH);
 		OFF(GREEN_LED);
 	  }
-	  else
+      else
 	  {
 		ON(RED_LED);
 		OFF(GREEN_LED);
@@ -318,6 +319,14 @@ void ShowInfoMsg()
 	short timer = 6; // 0.06s c.a (60ms)
 	String Time, Date;
 #ifdef RTC_INSERTED
+	if(PresentTime.minute < 10)
+	{
+		Time = String(PresentTime.hour) + ":" + "0" + String(PresentTime.minute);
+	}
+	else
+	{
+		Time = String(PresentTime.hour) + ":" + String(PresentTime.minute);	
+	}
 	Time = String(PresentTime.hour) + ":" + String(PresentTime.minute);
 	Date = String(PresentDate.day) + "/" + String(PresentDate.month);
 #endif
@@ -398,27 +407,29 @@ void setup()
 #ifdef RTC_INSERTED
   if (!RTC.begin()) 
   {
-    BlinkLed(YELLOW_LED);
-	BlinkLed(RED_LED);
-    //while (1);
+    while (1)
+	{
+		BlinkLed(YELLOW_LED);
+		BlinkLed(RED_LED);
+	}
   }
   
   if (!RTC.isrunning()) 
   {
-	// lcd_main.backlight();
-	// ClearLCD();
-	// LCDPrintString(0, CENTER_ALIGN, "RTC NOT running!");
-	// delay(1000);
-  // // following line sets the RTC to the date & time this sketch was compiled
-  	// //RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  	// ON(YELLOW_LED);
-  	// ON(BLUE_LED);
-	// ClearLCD();
-	// LCDPrintString(0, CENTER_ALIGN, "Setting the time");
-  	// delay(2000);
-  	// OFF(YELLOW_LED);
-  	// OFF(BLUE_LED);	
-    // lcd_main.noBacklight();	
+	lcd_main.backlight();
+	ClearLCD();
+	LCDPrintString(0, CENTER_ALIGN, "RTC NOT running!");
+	delay(1000);
+  // following line sets the RTC to the date & time this sketch was compiled
+  	RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  	ON(YELLOW_LED);
+  	ON(BLUE_LED);
+	ClearLCD();
+	LCDPrintString(0, CENTER_ALIGN, "Setting the time");
+  	delay(2000);
+  	OFF(YELLOW_LED);
+  	OFF(BLUE_LED);	
+    lcd_main.noBacklight();	
   }
 #endif
   
@@ -463,16 +474,16 @@ void setup()
 	QUANDO USO LA FUNZIONE PER IL CAMBIAMENTO DI DATA
 	*/
 #ifdef RTC_INSERTED  
-  // now = RTC.now();
-  // PresentDate.day = now.day();
-  // PresentDate.month = now.month();
-  // PresentDate.year = now.year();
-  // PresentTime.hour = now.hour();
-  // PresentTime.minute = now.minute();
-  PresentDate.day = 29;
-  PresentDate.month = 03;
-  PresentTime.hour = 18;
-  PresentTime.minute = 50;
+  now = RTC.now();
+  PresentDate.day = now.day();
+  PresentDate.month = now.month();
+  PresentDate.year = now.year();
+  PresentTime.hour = now.hour();
+  PresentTime.minute = now.minute();
+  // PresentDate.day = 29;
+  // PresentDate.month = 03;
+  // PresentTime.hour = 18;
+  // PresentTime.minute = 50;
 #endif 
   
   ClearLCD();
@@ -487,11 +498,11 @@ void setup()
 void loop()
 {
 #ifdef RTC_INSERTED
-  // now = RTC.now();
-  // PresentDate.day = now.day();
-  // PresentDate.month = now.month();
-  // PresentTime.hour = now.hour();
-  // PresentTime.minute = now.minute();
+  now = RTC.now();
+  PresentDate.day = now.day();
+  PresentDate.month = now.month();
+  PresentTime.hour = now.hour();
+  PresentTime.minute = now.minute();
 #endif
   WriteHomeMsg();
   ShowInfoMsg();
@@ -508,6 +519,7 @@ void loop()
 	if(Flags.BandOk)
 	{
 		gestionePIR(EepromTab[PIR_STATE].eeprom_par_value);	
+		// BlinkLed(RED_LED);
 	}
 	else
 	{

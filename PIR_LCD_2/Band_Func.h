@@ -6,5 +6,6 @@ void SaveBandToEeprom();
 void ReadBandFromEeprom();
 void ChekBandValue();
 void SetBandInvalid();
+void BlinkLed(short pin);
 
 #endif
