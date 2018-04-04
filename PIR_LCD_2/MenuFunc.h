@@ -36,6 +36,7 @@ void LCDDisplayOn();
 void ClearLCD();
 void BlinkLed(short pin);
 short ChekButtons();
+void TakePresentTime(void);
 
 bool EnterSetupButton();
 bool ChangeTimeBands();

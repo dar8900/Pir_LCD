@@ -319,6 +319,7 @@ void ShowInfoMsg()
 	short timer = 6; // 0.06s c.a (60ms)
 	String Time, Date;
 #ifdef RTC_INSERTED
+	TakePresentTime();
 	if(PresentTime.minute < 10)
 	{
 		Time = String(PresentTime.hour) + ":" + "0" + String(PresentTime.minute);
@@ -377,144 +378,142 @@ void BlinkLed(short pin)
   digitalWrite(pin, LOW);
 }
 
-void setup()
+void TakePresentTime()
 {
-  short numReg = 0;
-  short FirstStartCheck = 0;
-  
-  Flags.Backlight = false;
-  Flags.Setup = false;
-  Flags.ShowInfo = false;
-  Flags.BandOk = false;
-  Flags.AllBandsInvalid = false;
-  
-  Serial.begin(9600);
-  
-  pinMode(BUTTON_UP, INPUT);
-  pinMode(BUTTON_DOWN, INPUT);
-  pinMode(BUTTON_SETUP, INPUT);
-  pinMode(RED_LED, OUTPUT);
-  pinMode(GREEN_LED, OUTPUT);
-  pinMode(BLUE_LED, OUTPUT);
-  pinMode(YELLOW_LED, OUTPUT);
-  pinMode(LIGHT_SWITCH, OUTPUT);
-
-	
-  lcd_main.begin();  
-  delay(1000);
-  lcd_main.noBlink(); 
-
-#ifdef RTC_INSERTED
-  if (!RTC.begin()) 
-  {
-    while (1)
-	{
-		BlinkLed(YELLOW_LED);
-		BlinkLed(RED_LED);
-	}
-  }
-  
-  if (!RTC.isrunning()) 
-  {
-	lcd_main.backlight();
-	ClearLCD();
-	LCDPrintString(0, CENTER_ALIGN, "RTC NOT running!");
-	delay(1000);
-  // following line sets the RTC to the date & time this sketch was compiled
-  	RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  	ON(YELLOW_LED);
-  	ON(BLUE_LED);
-	ClearLCD();
-	LCDPrintString(0, CENTER_ALIGN, "Setting the time");
-  	delay(2000);
-  	OFF(YELLOW_LED);
-  	OFF(BLUE_LED);	
-    lcd_main.noBacklight();	
-  }
-#endif
-  
-  ReadMemory(FIRST_START_CHECK_ADDR, 1, &FirstStartCheck);
-  if(FirstStartCheck == 255)
-  {
-	  WriteMemory(FIRST_START_CHECK_ADDR, 1);
-	  FirstStartCheck = 1;
-	  LCDPrintString(0,CENTER_ALIGN, "Default values");
-	  LCDPrintString(1, CENTER_ALIGN, "restored");
-	  delay(2000);
-  }
-  else
-  {
-	  FirstStartCheck = 0;
-  }
-  
-  // Leggi dalla memoria perchè non è il primo avvio
-  if(FirstStartCheck == 0)
-  {
-		ReadMemory(NUM_REG_ADDR, 1, &numReg); // Inizializzo il numero registri per il delay
-		ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
-		ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);	  
-#ifdef RTC_INSERTED		
-		ReadBandFromEeprom();
-#endif
-  }
-  else // Imposta i valori di default
-  {
-#ifdef RTC_INSERTED
-	    SetBandInvalid();
-		SaveBandToEeprom();
-#endif
-		WriteMemory(NUM_REG_ADDR, 1);
-		WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_value);
-		WriteMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_value);		
-  }
-
-   /*
-	ANDREBBE SETTATO IL TEMPO E LA DATA CORRENTI NELLE VARIABILI GLOBALI
-	IN MODO CHE NON SI POSSA SUPERARE IL NUMERO DI GIORNI PER IL MESE CORRENTE
-	QUANDO USO LA FUNZIONE PER IL CAMBIAMENTO DI DATA
-	*/
-#ifdef RTC_INSERTED  
   now = RTC.now();
   PresentDate.day = now.day();
   PresentDate.month = now.month();
   PresentDate.year = now.year();
   PresentTime.hour = now.hour();
   PresentTime.minute = now.minute();
-  // PresentDate.day = 29;
-  // PresentDate.month = 03;
-  // PresentTime.hour = 18;
-  // PresentTime.minute = 50;
-#endif 
+}
+
+static void InitMemory()
+{
+	short numReg = 0;
+	short FirstStartCheck = 0;
+	
+	ReadMemory(FIRST_START_CHECK_ADDR, 1, &FirstStartCheck);
+	if(FirstStartCheck == 255)
+	{
+	  WriteMemory(FIRST_START_CHECK_ADDR, 1);
+	  FirstStartCheck = 1;
+	  LCDPrintString(0,CENTER_ALIGN, "Default values");
+	  LCDPrintString(1, CENTER_ALIGN, "restored");
+	  delay(2000);
+	}
+	else
+	{
+	  FirstStartCheck = 0;
+	}
+
+	// Leggi dalla memoria perchè non è il primo avvio
+	if(FirstStartCheck == 0)
+	{
+		ReadMemory(NUM_REG_ADDR, 1, &numReg); // Inizializzo il numero registri per il delay
+		ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
+		ReadMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);	  
+	#ifdef RTC_INSERTED		
+		ReadBandFromEeprom();
+	#endif
+	}
+	else // Imposta i valori di default
+	{
+	#ifdef RTC_INSERTED
+		SetBandInvalid();
+		SaveBandToEeprom();
+	#endif
+		WriteMemory(NUM_REG_ADDR, 1);
+		WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_value);
+		WriteMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_value);		
+	}
+	return;
+}
+
+static void RTCInit()
+{
+	if (!RTC.begin()) 
+	{
+		while (1)
+		{
+			BlinkLed(YELLOW_LED);
+			BlinkLed(RED_LED);
+		}
+	}
+
+	if (!RTC.isrunning()) 
+	{
+		lcd_main.backlight();
+		ClearLCD();
+		LCDPrintString(0, CENTER_ALIGN, "RTC NOT running!");
+		delay(1000);
+		// following line sets the RTC to the date & time this sketch was compiled
+		RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+		ON(YELLOW_LED);
+		ON(BLUE_LED);
+		ClearLCD();
+		LCDPrintString(0, CENTER_ALIGN, "Setting the time");
+		delay(2000);
+		OFF(YELLOW_LED);
+		OFF(BLUE_LED);	
+		lcd_main.noBacklight();	
+	}	
+	return;
+}
+
+
+void setup()
+{
   
-  ClearLCD();
+	Flags.Backlight = false;
+	Flags.Setup = false;
+	Flags.ShowInfo = false;
+	Flags.BandOk = false;
+	Flags.AllBandsInvalid = false;
+
+	Serial.begin(9600);
+
+	pinMode(BUTTON_UP, INPUT);
+	pinMode(BUTTON_DOWN, INPUT);
+	pinMode(BUTTON_SETUP, INPUT);
+	pinMode(RED_LED, OUTPUT);
+	pinMode(GREEN_LED, OUTPUT);
+	pinMode(BLUE_LED, OUTPUT);
+	pinMode(YELLOW_LED, OUTPUT);
+	pinMode(LIGHT_SWITCH, OUTPUT);
+
+	lcd_main.begin();  
+	delay(1000);
+	lcd_main.noBlink(); 
+
+#ifdef RTC_INSERTED
+	RTCInit();
+	TakePresentTime();
+#endif
   
-  InfoScroll();
-  
-  delay(1000);
-  
-  ClearLCD(); 
+	InitMemory(); 
+	ClearLCD();
+	InfoScroll();
+	delay(1000);
+	ClearLCD(); 
 }
 
 void loop()
 {
 #ifdef RTC_INSERTED
-  now = RTC.now();
-  PresentDate.day = now.day();
-  PresentDate.month = now.month();
-  PresentTime.hour = now.hour();
-  PresentTime.minute = now.minute();
+	TakePresentTime();
 #endif
-  WriteHomeMsg();
-  ShowInfoMsg();
-  if(Flags.Setup)
-  {
-    MainSetup();
-  }
-  else
-  {
+	WriteHomeMsg();
+	ShowInfoMsg();
+	if(Flags.Setup)
+	{
+		MainSetup();
+	}
+	else
+	{
 	// INSERIRE BOOLEANO PER CHEK DEL BAND, NEL CASO FOSSE FALSE (OVVERO FUORI FASCIA O INVALIDO) 
 	// SPEGNERE IL SENSORE, ALTRIMENTI LASCIARE LA GESTIONE CHE C'è ORA
-#ifdef RTC_INSERTED
+	#ifdef RTC_INSERTED
 	ChekBandValue();
 	if(Flags.BandOk)
 	{
@@ -525,11 +524,11 @@ void loop()
 	{
 		gestionePIR(TURN_OFF);		
 	}
-#else
+	#else
 	gestionePIR(EepromTab[PIR_STATE].eeprom_par_value);
-#endif  	
+	#endif  	
 
-  }
+	}
 }
 
 
