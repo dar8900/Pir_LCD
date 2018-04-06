@@ -3,13 +3,8 @@
 
 #include <Arduino.h>
 
-#undef  NEW_EEPROM
-
-#ifndef NEW_EEPROM
-#define MAX_EEPROM_DIM	      EEPROM.length()
-#else
 #define MAX_EEPROM_DIM				    32766
-#endif
+
 
 #define MAX_CELL_EEPROM	                  254
 
@@ -34,10 +29,8 @@ int WriteMemory(short address, short value);
 bool ReadMemory(short address, short numReg, short *value);
 bool ClearMemory();
 bool IsMemoryEmpty();
+void EepromUpdate(short address, short value);
 
-#ifdef NEW_EEPROM
-void EepromUpdate(short address, short value)
-#define 	EEPROM.update(address, value)  EepromUpdate(address, value)
-#endif
+
 
 #endif

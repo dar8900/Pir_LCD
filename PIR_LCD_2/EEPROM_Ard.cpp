@@ -1,9 +1,8 @@
 #include "EEPROM_Ard.h"
 #include <Arduino.h>
 
-#ifndef NEW_EEPROM
-#include <EEPROM.h>
-#endif
+#include "RTC_EEPROMLib.h"
+
 
 /*
 es. value = 6793
@@ -12,6 +11,7 @@ resto = 163
 
 */
 
+static RTCLib eep_func;
 
 int WriteMemory(short address, short value)
 {
@@ -25,7 +25,7 @@ int WriteMemory(short address, short value)
     {
       numReg = 1;
       FlagValueBig = 0;
-      EEPROM.update(FLAG_VALUE_ADDR, FlagValueBig);
+      EepromUpdate(FLAG_VALUE_ADDR, FlagValueBig);
     }
     else if((value / MAX_CELL_EEPROM) == 1)
     {
@@ -33,20 +33,20 @@ int WriteMemory(short address, short value)
       {
         numReg = (value / MAX_CELL_EEPROM) + 1;
         FlagValueBig = 1;
-        EEPROM.update(FLAG_VALUE_ADDR, FlagValueBig);
+        EepromUpdate(FLAG_VALUE_ADDR, FlagValueBig);
       }
       else
       {
         numReg = 1;
         FlagValueBig = 0;
-        EEPROM.update(FLAG_VALUE_ADDR, FlagValueBig);
+        EepromUpdate(FLAG_VALUE_ADDR, FlagValueBig);
       }
     }
     else
     {
       numReg = (value / MAX_CELL_EEPROM) + 1;
       FlagValueBig = 1;
-      EEPROM.update(FLAG_VALUE_ADDR, FlagValueBig);
+      EepromUpdate(FLAG_VALUE_ADDR, FlagValueBig);
       if(address + (numReg - 1) > MAX_EEPROM_DIM)
       {
         numReg = 0;
@@ -65,16 +65,16 @@ int WriteMemory(short address, short value)
         {
           if(idx < numReg - 1)
           {
-            EEPROM.write(address + idx, MAX_CELL_EEPROM);
+            eep_func.eeprom_write(address + idx, MAX_CELL_EEPROM);
           }
           else
           {
-            EEPROM.write(address + idx, resto);
+            eep_func.eeprom_write(address + idx, resto);
           }
         }
         else
         {
-          EEPROM.write(address, value);     
+          eep_func.eeprom_write(address, value);     
         }       
       }
     }   
@@ -86,7 +86,7 @@ int WriteMemory(short address, short value)
 
  if(address == START_DELAY_ADDR)
  {
-   EEPROM.update(NUM_REG_ADDR, numReg);
+   EepromUpdate(NUM_REG_ADDR, numReg);
  }
   
   return  numReg;
@@ -99,25 +99,25 @@ bool ReadMemory(short address, short numReg, short *value)
   bool ReadOk = false;
   if(address == START_DELAY_ADDR)
   {
-	  FlagValueBig = EEPROM.read(FLAG_VALUE_ADDR);
+	  FlagValueBig = eep_func.eeprom_read(FLAG_VALUE_ADDR);
 	  
 	  if(!FlagValueBig)
 	  {
-		 ValueRead = EEPROM.read(address);
+		 ValueRead = eep_func.eeprom_read(address);
 		 ReadOk = true;      
 	  }
 	  else
 	  {
 		for(short idx = 0; idx < numReg; idx++)
 		{
-		  ValueRead += EEPROM.read(address + idx);      
+		  ValueRead += eep_func.eeprom_read(address + idx);      
 		}
 		ReadOk = true;
 	  }	  
   }
   else
   {
-	ValueRead = EEPROM.read(address);
+	ValueRead = eep_func.eeprom_read(address);
 	ReadOk = true;   	  
   }
 
@@ -133,7 +133,7 @@ bool ClearMemory()
 	// Tempo di cancellazione massimo 3.3 s
 	for(short i = 0; i < MAX_EEPROM_DIM; i++)
 	{
-		EEPROM.update(i, 255);
+		EepromUpdate(i, 255);
 	}
 	return true;
 }
@@ -144,7 +144,7 @@ bool IsMemoryEmpty()
 	short Value;
 	for(short i = 0; i < MAX_EEPROM_DIM; i++)
 	{
-		Value = EEPROM.read(i);
+		Value = eep_func.eeprom_read(i);
 		if(Value != 255)
 			Empty = false;		
 		
@@ -152,13 +152,10 @@ bool IsMemoryEmpty()
 	return Empty;
 }
 
-
-#ifdef NEW_EEPROM
 void EepromUpdate(short address, short value)
 {
-	if(eeprom.read(address) != value)
+	if(eep_func.eeprom_read(address) != value)
 	{
-		eeprom.write(address, value);
+		eep_func.eeprom_write(address, value);
 	}
 }
-#endif

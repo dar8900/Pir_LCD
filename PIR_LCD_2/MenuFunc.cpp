@@ -170,9 +170,11 @@ bool SwichState()
 		case SWITCH_STATE:
 			EepromItem = PIR_STATE;
 			break;
+#ifdef RTC_INSERTED
 		case MANUAL_STATE:
 			EepromItem = MANUAL_LIGHT;
 			break;
+#endif
 		default:
 			EepromItem = PIR_STATE;
 			break;
@@ -685,10 +687,12 @@ bool InfoScroll()
 			{
 				Page = MIN_INFO_PAGES;
 			}
+#ifdef RTC_INSERTED
 			if(Page >= HOUR_BAND_1 && Page <= MONTH_BAND_2)
 			{
 				Page = MONTH_BAND_2;
 			}
+#endif
 			break;
 		case DOWN:
 			BlinkLed(YELLOW_LED); // blink giallo
@@ -697,10 +701,12 @@ bool InfoScroll()
 			{
 				Page = MAX_EEPROM_ITEM - 1;
 			}
+#ifdef RTC_INSERTED
 			if(Page >= HOUR_BAND_1 && Page <= MONTH_BAND_2)
 			{
 				Page = HOUR_BAND_1;
 			}
+#endif
 			break;
 		case OK_EXIT:
 			BlinkLed(YELLOW_LED); // blink giallo

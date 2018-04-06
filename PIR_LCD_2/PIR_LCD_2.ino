@@ -1,6 +1,7 @@
-#include <RTClib.h>
+
 #include <Wire.h>  // Libreria di sistema - E' richiesta da I2CIO.cpp
 #include <LiquidCrystal_I2C.h> // Libreria LCD I2C
+#include "RTC_EEPROMLib.h"
 
 #include "PIR_LCD_2.h"
 #include "EEPROM_Ard.h"
@@ -16,8 +17,9 @@ TIME_DATE_FORMAT PresentTime;  // Variabili per l'orario
 						 //	
 TIME_DATE_FORMAT Band_1, Band_2;//
 
-RTC_DS1307 RTC;
-DateTime now;
+// RTC_DS1307 RTC;
+// DateTime now;
+RTCLib now;
 #endif
 
 FLAGS Flags;
@@ -391,15 +393,16 @@ void BlinkLed(short pin)
   digitalWrite(pin, LOW);
 }
 
+#ifdef RTC_INSERTED
 void TakePresentTime()
 {
-  now = RTC.now();
+  now.refresh();
   PresentTime.day = now.day();
   PresentTime.month = now.month();
-  PresentTime.year = now.year();
   PresentTime.hour = now.hour();
   PresentTime.minute = now.minute();
 }
+#endif
 
 static void InitMemory()
 {
@@ -443,9 +446,11 @@ static void InitMemory()
 	return;
 }
 
+#ifdef RTC_INSERTED
+/*
 static void RTCInit()
 {
-	if (!RTC.begin()) 
+	if (!RTC->begin()) 
 	{
 		while (1)
 		{
@@ -473,7 +478,36 @@ static void RTCInit()
 	}	
 	return;
 }
-
+*/
+static uint8_t conv2d(const char* p) 
+{
+    uint8_t v = 0;
+    if ('0' <= *p && *p <= '9')
+        v = *p - '0';
+    return 10 * v + *++p - '0';
+}
+void RTCInit(const char* date, const char* time) 
+{
+	unsigned char hour, minute, second, day, month;
+    switch (date[0]) 
+	{
+        case 'J': month = (date[1] == 'a') ? 1 : ((date[2] == 'n') ? 6 : 7); break;
+        case 'F': month = 2; break;
+        case 'A': month = date[2] == 'r' ? 4 : 8; break;
+        case 'M': month = date[2] == 'r' ? 3 : 5; break;
+        case 'S': month = 9; break;
+        case 'O': month = 10; break;
+        case 'N': month = 11; break;
+        case 'D': month = 12; break;
+    }
+   day = conv2d(date + 4);
+   hour = conv2d(time);
+   minute = conv2d(time + 3);
+   second = conv2d(time + 6);
+   now.set(second, minute, hour, 1, day, month, 18);
+   // RTCLib::set(byte second, byte minute, byte hour, byte dayOfWeek, byte dayOfMonth, byte month, byte year)
+}
+#endif
 
 void setup()
 {
@@ -500,7 +534,7 @@ void setup()
 	lcd_main.noBlink(); 
 
 #ifdef RTC_INSERTED
-	RTCInit();
+	RTCInit(__DATE__, __TIME__);
 	TakePresentTime();
 #endif
   
