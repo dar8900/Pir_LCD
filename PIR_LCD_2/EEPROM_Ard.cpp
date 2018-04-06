@@ -1,6 +1,9 @@
 #include "EEPROM_Ard.h"
 #include <Arduino.h>
+
+#ifndef NEW_EEPROM
 #include <EEPROM.h>
+#endif
 
 /*
 es. value = 6793
@@ -127,7 +130,7 @@ bool ReadMemory(short address, short numReg, short *value)
 
 bool ClearMemory()
 {
-	// Tempo di cancellazione 3.3 s
+	// Tempo di cancellazione massimo 3.3 s
 	for(short i = 0; i < MAX_EEPROM_DIM; i++)
 	{
 		EEPROM.update(i, 255);
@@ -148,3 +151,14 @@ bool IsMemoryEmpty()
 	}
 	return Empty;
 }
+
+
+#ifdef NEW_EEPROM
+void EepromUpdate(short address, short value)
+{
+	if(eeprom.read(address) != value)
+	{
+		eeprom.write(address, value);
+	}
+}
+#endif

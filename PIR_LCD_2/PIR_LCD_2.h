@@ -36,6 +36,7 @@ typedef enum
   CHANGE_VALUE = 0,   // menu dove cambi solo un valore numerico
   SWITCH_STATE,   // menu dove viene gestito solo lo switch on off per uscite digitali
   INFO,        // menu a scorrimento automatico con tutte le info salvate in eeprom
+  MANUAL_STATE,
   TIME_BAND_NUM
 } MENU_TYPE_NBR;
 #else
@@ -67,6 +68,7 @@ typedef enum
 {
   DELAY_AMOUNT = 0,
   PIR_STATE,
+  MANUAL_LIGHT,
 #ifdef RTC_INSERTED
   HOUR_BAND_1,
   HOUR_BAND_2, 
@@ -92,20 +94,23 @@ typedef struct
 {
 	short hour;
 	short minute;
-} TIME_FORMAT;
-
-typedef struct
-{
 	short day;
 	short month;
 	short year;
-} DATE_FORMAT;
+} TIME_DATE_FORMAT;
 
-typedef struct
-{
-	TIME_FORMAT BandTime;
-	DATE_FORMAT BandDate;
-} TIME_BAND;
+// typedef struct
+// {
+	// short day;
+	// short month;
+	// short year;
+// } DATE_FORMAT;
+
+// typedef struct
+// {
+	// TIME_FORMAT BandTime;
+	// DATE_FORMAT BandDate;
+// } TIME_BAND;
 #endif
 
 enum

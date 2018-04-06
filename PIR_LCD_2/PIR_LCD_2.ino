@@ -11,10 +11,10 @@
 LiquidCrystal_I2C lcd_main(0x27, 20,4);
 
 #ifdef RTC_INSERTED
-TIME_FORMAT PresentTime;  // Variabili per l'orario
-DATE_FORMAT PresentDate;  // Si perdono allo spegnimento ma vengono aggiornate subito all'accensione
+TIME_DATE_FORMAT PresentTime;  // Variabili per l'orario
+// DATE_FORMAT PresentDate;  // Si perdono allo spegnimento ma vengono aggiornate subito all'accensione
 						 //	
-TIME_BAND Band_1, Band_2;//
+TIME_DATE_FORMAT Band_1, Band_2;//
 
 RTC_DS1307 RTC;
 DateTime now;
@@ -24,12 +24,14 @@ FLAGS Flags;
 
 
 short buttonUp = LOW, buttonDown = LOW, OkButton = LOW;
+short MainMenuPage;
 
 CREATE_MENU MainSetupItems[] = 
 {
   {"Change light delay", ChangeValue		},
   {"Change PIR state"  , SwichState 		},
   {"Show Info"         , InfoScroll         },
+  {"Manual State"	   , SwichState 		},
 #ifdef RTC_INSERTED
   {"Change Time Bands" , ChangeTimeBands    },
 #endif
@@ -39,6 +41,7 @@ EEPROM_ITEM EepromTab[] =
 {
   {MIN_LIGHT_DELAY			,  START_DELAY_ADDR       , 1,  "Light delay"   , CHANGE_VALUE},
   {TURN_OFF					,  SWITCH_PIR_ADDR        , 1,  "PIR state"     , SWITCH_STATE},
+  {TURN_OFF					,  MANUAL_STATE_ADDR      , 1,  "Manual state"  , SWITCH_STATE},
 #ifdef RTC_INSERTED
   {BAND_INVALID_VALUE       ,  HOUR_BAND_1_ADDR       , 1,  ""   , TIME_BAND_NUM},
   {BAND_INVALID_VALUE    	,  HOUR_BAND_2_ADDR       , 1,  ""   , TIME_BAND_NUM},
@@ -83,9 +86,18 @@ void LCDPrintString(short row, short col, String string)
   if(col > MAX_LCD_COL || row > MAX_LCD_ROW || string.length() > 20) // ???
   {
 	lcd_main.clear();
-	col = CENTER_ALIGN;
-	row = 3;
-    string = "OVER DIMENSION";   
+	if(string.length() > 20)
+	{
+		col = CENTER_ALIGN;
+		string = "STRING TOO BIG";  		
+	}
+	else
+	{
+		col = CENTER_ALIGN;
+		row = 3;
+		string = "OVER DIMENSION"; 		
+	}
+  
   }
   switch(col)
   {
@@ -217,6 +229,7 @@ void MainSetup()
 			break;
 		case OK_EXIT:
 		    BlinkLed(YELLOW_LED); // blink giallo
+			MainMenuPage = Page;
 			ExitSetup = MainSetupItems[Page].MenuFunc();      
 			break;
 		default:
@@ -329,7 +342,7 @@ void ShowInfoMsg()
 		Time = String(PresentTime.hour) + ":" + String(PresentTime.minute);	
 	}
 	Time = String(PresentTime.hour) + ":" + String(PresentTime.minute);
-	Date = String(PresentDate.day) + "/" + String(PresentDate.month);
+	Date = String(PresentTime.day) + "/" + String(PresentTime.month);
 #endif
     while(timer > 0)
     {
@@ -381,9 +394,9 @@ void BlinkLed(short pin)
 void TakePresentTime()
 {
   now = RTC.now();
-  PresentDate.day = now.day();
-  PresentDate.month = now.month();
-  PresentDate.year = now.year();
+  PresentTime.day = now.day();
+  PresentTime.month = now.month();
+  PresentTime.year = now.year();
   PresentTime.hour = now.hour();
   PresentTime.minute = now.minute();
 }
