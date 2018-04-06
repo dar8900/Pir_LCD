@@ -524,22 +524,20 @@ void loop()
 	}
 	else
 	{
-	// INSERIRE BOOLEANO PER CHEK DEL BAND, NEL CASO FOSSE FALSE (OVVERO FUORI FASCIA O INVALIDO) 
-	// SPEGNERE IL SENSORE, ALTRIMENTI LASCIARE LA GESTIONE CHE C'è ORA
-	#ifdef RTC_INSERTED
-	ChekBandValue();
-	if(Flags.BandOk)
-	{
-		gestionePIR(EepromTab[PIR_STATE].eeprom_par_value);	
-		// BlinkLed(RED_LED);
-	}
-	else
-	{
-		gestionePIR(TURN_OFF);		
-	}
-	#else
-	gestionePIR(EepromTab[PIR_STATE].eeprom_par_value);
-	#endif  	
+#ifdef RTC_INSERTED
+		ChekBandValue();
+		if(Flags.BandOk)
+		{
+			gestionePIR(EepromTab[PIR_STATE].eeprom_par_value);	
+			// BlinkLed(RED_LED);
+		}
+		else
+		{
+			gestionePIR(TURN_OFF);		
+		}
+#else
+		gestionePIR(EepromTab[PIR_STATE].eeprom_par_value);
+#endif  	
 
 	}
 }
