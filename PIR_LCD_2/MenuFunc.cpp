@@ -229,6 +229,18 @@ bool SwichState()
 				{
 					WriteMemory(EepromTab[EepromItem].eeprom_par_addr, SwitchOnOff);
 				}
+				if(MainMenuPage == MANUAL_STATE && SwitchOnOff == TURN_ON)
+				{
+					ON(LIGHT_SWITCH);
+					Flags.ManualState = true;
+				}
+				else if(MainMenuPage == MANUAL_STATE && SwitchOnOff == TURN_OFF)
+				{
+					OFF(LIGHT_SWITCH);
+					Flags.ManualState = false;					
+				}
+				else
+					OFF(LIGHT_SWITCH);
 				OkSwitch = true;       
 				delay(2000);
 				break;

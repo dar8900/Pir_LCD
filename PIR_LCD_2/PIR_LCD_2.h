@@ -132,6 +132,7 @@ typedef struct
 	bool ShowInfo;
     bool BandOk;
     bool AllBandsInvalid;
+	bool ManualState;
 } FLAGS;
 
 enum 

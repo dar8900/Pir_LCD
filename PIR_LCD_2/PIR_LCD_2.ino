@@ -483,6 +483,7 @@ void setup()
 	Flags.ShowInfo = false;
 	Flags.BandOk = false;
 	Flags.AllBandsInvalid = false;
+	Flags.ManualState = false;
 
 	Serial.begin(9600);
 
@@ -524,23 +525,22 @@ void loop()
 	}
 	else
 	{
-	// INSERIRE BOOLEANO PER CHEK DEL BAND, NEL CASO FOSSE FALSE (OVVERO FUORI FASCIA O INVALIDO) 
-	// SPEGNERE IL SENSORE, ALTRIMENTI LASCIARE LA GESTIONE CHE C'è ORA
-	#ifdef RTC_INSERTED
-	ChekBandValue();
-	if(Flags.BandOk)
-	{
-		gestionePIR(EepromTab[PIR_STATE].eeprom_par_value);	
-		// BlinkLed(RED_LED);
-	}
-	else
-	{
-		gestionePIR(TURN_OFF);		
-	}
-	#else
-	gestionePIR(EepromTab[PIR_STATE].eeprom_par_value);
-	#endif  	
-
+		if(!Flags.ManualState)
+		{
+#ifdef RTC_INSERTED
+			ChekBandValue();
+			if(Flags.BandOk)
+			{
+				gestionePIR(EepromTab[PIR_STATE].eeprom_par_value);	
+			}
+			else
+			{
+				gestionePIR(TURN_OFF);		
+			}
+#else
+			gestionePIR(EepromTab[PIR_STATE].eeprom_par_value);
+#endif  	
+		}
 	}
 }
 
