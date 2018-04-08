@@ -372,6 +372,12 @@ void ShowInfoMsg()
 		LCDPrintString(3, CENTER_ALIGN, "the sensor");
 		delay(3000);
 		ClearLCD();
+		LCDPrintString(0, CENTER_ALIGN, "Change to");
+		LCDPrintString(1, CENTER_ALIGN, "manual mode");
+		LCDPrintString(2, CENTER_ALIGN, "to turn ON or OFF");
+		LCDPrintString(3, CENTER_ALIGN, "the sensor");
+		delay(3000);
+		ClearLCD();
 	    LCDPrintString(1, CENTER_ALIGN, Time);
 		LCDPrintString(2, CENTER_ALIGN, Date);
 		delay(3000);
