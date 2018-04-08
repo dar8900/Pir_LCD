@@ -1,1 +1,3 @@
 http://wiki.stm32duino.com/index.php?title=Main_Page
+
+https://github.com/stm32duino/BoardManagerFiles/raw/master/STM32/package_stm_index.json
