@@ -19,7 +19,15 @@
 #define  OFF(pin)  digitalWrite(pin, LOW)
 #define  ON(pin)   digitalWrite(pin, HIGH)
 
-#define AnalogPirPin  0
+#define BUTTON_UP		PB13
+#define BUTTON_DOWN		PB14
+#define BUTTON_SETUP	PB15
+#define RED_LED			PB4
+#define GREEN_LED		PB3
+#define BLUE_LED		PA15
+#define YELLOW_LED		PA12
+#define LIGHT_SWITCH	PA11
+#define PIR_ANALOG_PIN	PA0
 
 #define AUTOSCROLL_TIMER  100
 
@@ -113,17 +121,19 @@ typedef struct
 // } TIME_BAND;
 #endif
 
-enum
-{
-  BUTTON_UP = 2,
-  BUTTON_DOWN,
-  BUTTON_SETUP,
-  RED_LED,
-  GREEN_LED,
-  BLUE_LED,
-  YELLOW_LED,
-  LIGHT_SWITCH
-};
+// enum
+// {
+  // BUTTON_UP = 2,
+  // BUTTON_DOWN,
+  // BUTTON_SETUP,
+  // RED_LED,
+  // GREEN_LED,
+  // BLUE_LED,
+  // YELLOW_LED,
+  // LIGHT_SWITCH
+// };
+
+
 
 typedef struct
 {

@@ -296,9 +296,9 @@ void gestionePIR(short StatePIR)
   short numReg;
   if(StatePIR == TURN_ON)
   {
-	  val = analogRead(AnalogPirPin);    
-	  Serial.println(val);
-	  val = (val *5)/1024;
+	  val = analogRead(PIR_ANALOG_PIN);    
+	  // Serial.println(val);
+	  val = (val *3)/4096;
 	  ClearLCD();
 	  if(val > 0)
 	  {
@@ -371,6 +371,12 @@ void ShowInfoMsg()
 		LCDPrintString(0, CENTER_ALIGN, "Change the bands");
 		LCDPrintString(1, CENTER_ALIGN, "to set when");
 		LCDPrintString(2, CENTER_ALIGN, "turn ON");
+		LCDPrintString(3, CENTER_ALIGN, "the sensor");
+		delay(3000);
+		ClearLCD();
+		LCDPrintString(0, CENTER_ALIGN, "Change to");
+		LCDPrintString(1, CENTER_ALIGN, "manual mode");
+		LCDPrintString(2, CENTER_ALIGN, "to turn OFF");
 		LCDPrintString(3, CENTER_ALIGN, "the sensor");
 		delay(3000);
 		ClearLCD();
@@ -528,7 +534,8 @@ void setup()
 	pinMode(BLUE_LED, OUTPUT);
 	pinMode(YELLOW_LED, OUTPUT);
 	pinMode(LIGHT_SWITCH, OUTPUT);
-
+	pinMode(PIR_ANALOG_PIN, INPUT_ANALOG);
+	
 	lcd_main.begin();  
 	delay(1000);
 	lcd_main.noBlink(); 
