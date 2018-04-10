@@ -167,9 +167,9 @@ short ChekButtons()
 	buttonUp = LOW;
 	buttonDown = LOW;
 	OkButton = LOW;
-	buttonUp = digitalRead(BUTTON_UP);
-    buttonDown = digitalRead(BUTTON_DOWN);
-    OkButton = digitalRead(BUTTON_SETUP);
+	buttonUp = READ(BUTTON_UP);
+    buttonDown = READ(BUTTON_DOWN);
+    OkButton = READ(BUTTON_SETUP);
 	if(buttonUp == HIGH)
 		ButtonPress = UP;
 	if(buttonDown == HIGH)
@@ -294,9 +294,7 @@ void gestionePIR(short StatePIR)
   short numReg;
   if(StatePIR == TURN_ON)
   {
-	  val = analogRead(AnalogPirPin);    
-	  Serial.println(val);
-	  val = (val *5)/1024;
+	  val = READ(PIR_INPUT);    
 	  ClearLCD();
 	  if(val > 0)
 	  {
@@ -347,7 +345,7 @@ void ShowInfoMsg()
     while(timer > 0)
     {
 		timer--;
-		InfoPressed = digitalRead(BUTTON_UP);
+		InfoPressed = READ(BUTTON_UP);
 		if(InfoPressed == HIGH)
 		{
 			InfoPressed = LOW;
@@ -501,7 +499,8 @@ void setup()
 	pinMode(BLUE_LED, OUTPUT);
 	pinMode(YELLOW_LED, OUTPUT);
 	pinMode(LIGHT_SWITCH, OUTPUT);
-
+	pinMode(PIR_INPUT, INPUT);
+	
 	lcd_main.begin();  
 	delay(1000);
 	lcd_main.noBlink(); 

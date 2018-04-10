@@ -19,9 +19,7 @@
 #define  OFF(pin)  digitalWrite(pin, LOW)
 #define  ON(pin)   digitalWrite(pin, HIGH)
 
-#define AnalogPirPin  0
-
-#define AUTOSCROLL_TIMER  100
+#define READ(pin)  digitalRead(pin)
 
 #define BAND_INVALID_VALUE 	99
 
@@ -98,31 +96,20 @@ typedef struct
 	short month;
 	short year;
 } TIME_DATE_FORMAT;
-
-// typedef struct
-// {
-	// short day;
-	// short month;
-	// short year;
-// } DATE_FORMAT;
-
-// typedef struct
-// {
-	// TIME_FORMAT BandTime;
-	// DATE_FORMAT BandDate;
-// } TIME_BAND;
 #endif
 
 enum
 {
-  BUTTON_UP = 2,
-  BUTTON_DOWN,
-  BUTTON_SETUP,
-  RED_LED,
-  GREEN_LED,
-  BLUE_LED,
-  YELLOW_LED,
-  LIGHT_SWITCH
+					// PIN
+  BUTTON_UP = 2,	//  2
+  BUTTON_DOWN,      //  3
+  BUTTON_SETUP,     //  4
+  RED_LED,          //  5
+  GREEN_LED,        //  6
+  BLUE_LED,         //  7
+  YELLOW_LED,       //  8
+  LIGHT_SWITCH,     //  9
+  PIR_INPUT         // 10
 };
 
 typedef struct

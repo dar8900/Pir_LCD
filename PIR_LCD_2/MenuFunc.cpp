@@ -6,7 +6,6 @@
 #ifdef RTC_INSERTED
 extern TIME_DATE_FORMAT Band_1;
 extern TIME_DATE_FORMAT Band_2;
-// extern DATE_FORMAT PresentDate;
 extern TIME_DATE_FORMAT PresentTime;
 #endif
 
@@ -36,7 +35,7 @@ static const short TabDays4Month[] =
 
 bool EnterSetupButton()
 {
-  short SetupOk = digitalRead(BUTTON_SETUP);
+  short SetupOk = READ(BUTTON_SETUP);
   if(SetupOk == HIGH)
   {
     BlinkLed(YELLOW_LED);
