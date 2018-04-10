@@ -296,17 +296,15 @@ void gestionePIR(short StatePIR)
   short numReg;
   if(StatePIR == TURN_ON)
   {
-	  val = analogRead(PIR_ANALOG_PIN);    
-	  // Serial.println(val);
-	  val = (val *3)/4096;
+	  val = digitalRead(PIR_PIN);    
 	  ClearLCD();
-	  if(val > 0)
+	  if(val == HIGH)
 	  {
 		lcd_main.backlight();
 		Flags.Backlight = true;
 		ON(GREEN_LED); 
 		OFF(RED_LED);
-		ReadMemory(NUM_REG_ADDR , 1, (short*)&numReg);
+		ReadMemory(NUM_REG_ADDR , 1, &numReg);
 		ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
 		ON(LIGHT_SWITCH);
 		LcdTimeWrite(EepromTab[DELAY_AMOUNT].eeprom_par_value);
@@ -453,38 +451,6 @@ static void InitMemory()
 }
 
 #ifdef RTC_INSERTED
-/*
-static void RTCInit()
-{
-	if (!RTC->begin()) 
-	{
-		while (1)
-		{
-			BlinkLed(YELLOW_LED);
-			BlinkLed(RED_LED);
-		}
-	}
-
-	if (!RTC.isrunning()) 
-	{
-		lcd_main.backlight();
-		ClearLCD();
-		LCDPrintString(0, CENTER_ALIGN, "RTC NOT running!");
-		delay(1000);
-		// following line sets the RTC to the date & time this sketch was compiled
-		RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
-		ON(YELLOW_LED);
-		ON(BLUE_LED);
-		ClearLCD();
-		LCDPrintString(0, CENTER_ALIGN, "Setting the time");
-		delay(2000);
-		OFF(YELLOW_LED);
-		OFF(BLUE_LED);	
-		lcd_main.noBacklight();	
-	}	
-	return;
-}
-*/
 static uint8_t conv2d(const char* p) 
 {
     uint8_t v = 0;
@@ -534,7 +500,7 @@ void setup()
 	pinMode(BLUE_LED, OUTPUT);
 	pinMode(YELLOW_LED, OUTPUT);
 	pinMode(LIGHT_SWITCH, OUTPUT);
-	pinMode(PIR_ANALOG_PIN, INPUT_ANALOG);
+	pinMode(PIR_PIN, INPUT);
 	
 	lcd_main.begin();  
 	delay(1000);

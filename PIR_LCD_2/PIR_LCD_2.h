@@ -27,9 +27,7 @@
 #define BLUE_LED		PA15
 #define YELLOW_LED		PA12
 #define LIGHT_SWITCH	PA11
-#define PIR_ANALOG_PIN	PA0
-
-#define AUTOSCROLL_TIMER  100
+#define PIR_PIN	PA0
 
 #define BAND_INVALID_VALUE 	99
 
