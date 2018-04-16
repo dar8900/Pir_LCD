@@ -2,6 +2,7 @@
 #include "EEPROM_Ard.h"
 #include "Band_Func.h"
 #include "MenuFunc.h"
+#include "LCDLib.h"
 
 #ifdef RTC_INSERTED
 extern TIME_DATE_FORMAT Band_1;

@@ -1,14 +1,15 @@
 #include <RTClib.h>
 #include <Wire.h>  // Libreria di sistema - E' richiesta da I2CIO.cpp
-#include <LiquidCrystal_I2C.h> // Libreria LCD I2C
+
 
 #include "PIR_LCD_2.h"
 #include "EEPROM_Ard.h"
 #include "Band_Func.h"
 #include "MenuFunc.h"
+#include "LCDLib.h"
 
 //LiquidCrystal_I2C lcd_main(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // Old version
-LiquidCrystal_I2C lcd_main(0x27, 20,4);
+
 
 #ifdef RTC_INSERTED
 TIME_DATE_FORMAT PresentTime;  // Variabili per l'orario
@@ -56,111 +57,6 @@ EEPROM_ITEM EepromTab[] =
 
 
 
-void ClearLCD()
-{
-    //delay(10);
-    lcd_main.clear();
-    //lcd_main.home();
-}
-
-void LcdTimeWrite(int Time2Write)
-{
-  int cnt = Time2Write;
-  while(cnt != 0)
-  {
-    LCDPrintValue(1, CENTER_ALIGN, cnt);
-    delay(1000);
-    ClearLCD();
-    cnt--;
-  }  
-
-  LCDPrintString(1, CENTER_ALIGN, "The light is going");
-  LCDPrintString(2, CENTER_ALIGN, "to turn off");
-  delay(3000);
-  ClearLCD();
-}
-
-// Utilizzano un oggetto di tipo LCD
-void LCDPrintString(short row, short col, String string) 
-{
-  if(col > MAX_LCD_COL || row > MAX_LCD_ROW || string.length() > 20) // ???
-  {
-	lcd_main.clear();
-	if(string.length() > 20)
-	{
-		col = CENTER_ALIGN;
-		string = "STRING TOO BIG";  		
-	}
-	else
-	{
-		col = CENTER_ALIGN;
-		row = 3;
-		string = "OVER DIMENSION"; 		
-	}
-  
-  }
-  switch(col)
-  {
-    case CENTER_ALIGN:
-      col = ((MAX_LCD_COL+1) - string.length()) / 2;
-      break;
-    case RIGHT_ALIGN:
-      col = (MAX_LCD_COL+1) - string.length();
-      break;
-    case LEFT_ALIGN:
-      col = 0;
-      break;
-    default:
-      lcd_main.home();
-      break;
-  }
-  lcd_main.setCursor(col, row);
-  lcd_main.print(string);
-
-}
-
-void LCDPrintValue(short row, short col, short value)
-{
-  String ValStr = String(value);
-  if(col > MAX_LCD_COL || row > MAX_LCD_ROW || ValStr.length() > 20)
-  {
-	lcd_main.clear();
-	col = CENTER_ALIGN;
-	row = 3;
-    ValStr = "OVER DIMENSION"; 
-    return;
-  }
-  
-  switch(col)
-  {
-    case CENTER_ALIGN:
-      col = ((MAX_LCD_COL+1) - ValStr.length()) / 2;
-      break;
-    case RIGHT_ALIGN:
-      col = (MAX_LCD_COL+1) - ValStr.length();
-      break;
-    case LEFT_ALIGN:
-      col = 0;
-      break;
-    default:
-      lcd_main.home();
-      break;
-  }
-  lcd_main.setCursor(col, row);
-  lcd_main.print(ValStr);
-}
-
-void LCDPrintLineVoid(short row)
-{
-  lcd_main.setCursor(0, row);
-  lcd_main.print("                    ");
-}
-
-void LCDDisplayOn()
-{
-	lcd_main.backlight();
-}
-
 short ChekButtons()
 {
 	short ButtonPress = NO_BUTTON_PRESS;
@@ -189,7 +85,7 @@ void MainSetup()
   OFF(RED_LED);
   OFF(GREEN_LED);
   ON(BLUE_LED);
-  lcd_main.backlight();
+  LCDDisplayOn();
   
   Flags.Backlight = true;
 
@@ -270,7 +166,7 @@ void WriteHomeMsg()
     delay(2000);
     Flags.Setup = false;           
     Flags.Backlight = false;
-    lcd_main.noBacklight(); 
+    LCDDisplayOff(); 
     ClearLCD();
   }
   else if(Flags.Backlight && Flags.ShowInfo)
@@ -278,7 +174,7 @@ void WriteHomeMsg()
 	Flags.ShowInfo = 0;
 	Flags.Setup = false;           
     Flags.Backlight = false;
-    lcd_main.noBacklight(); 
+    LCDDisplayOff(); 
     ClearLCD();
   }
   else
@@ -298,7 +194,7 @@ void gestionePIR(short StatePIR)
 	  ClearLCD();
 	  if(val > 0)
 	  {
-		lcd_main.backlight();
+		LCDDisplayOn();
 		Flags.Backlight = true;
 		ON(GREEN_LED); 
 		OFF(RED_LED);
@@ -357,7 +253,7 @@ void ShowInfoMsg()
 	}	
 	if(Flags.ShowInfo)
 	{
-		lcd_main.backlight();
+		LCDDisplayOn();
 		Flags.Backlight = true;
 		LCDPrintString(1, CENTER_ALIGN, "Press Setup/Ok");
 		LCDPrintString(2, CENTER_ALIGN, "for the menu");
@@ -460,7 +356,7 @@ static void RTCInit()
 
 	if (!RTC.isrunning()) 
 	{
-		lcd_main.backlight();
+		LCDDisplayOn();
 		ClearLCD();
 		LCDPrintString(0, CENTER_ALIGN, "RTC NOT running!");
 		delay(1000);
@@ -473,7 +369,7 @@ static void RTCInit()
 		delay(2000);
 		OFF(YELLOW_LED);
 		OFF(BLUE_LED);	
-		lcd_main.noBacklight();	
+		LCDDisplayOff();	
 	}	
 	return;
 }
@@ -501,9 +397,9 @@ void setup()
 	pinMode(LIGHT_SWITCH, OUTPUT);
 	pinMode(PIR_INPUT, INPUT);
 	
-	lcd_main.begin();  
+	LCDInit(); 
 	delay(1000);
-	lcd_main.noBlink(); 
+	LCDNoBlink(); 
 
 #ifdef RTC_INSERTED
 	RTCInit();
