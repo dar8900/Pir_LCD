@@ -9,13 +9,6 @@
 
 #define MIN_INFO_PAGES  0
 
-#define MAX_LCD_ROW    3
-#define MAX_LCD_COL   19
-
-#define CENTER_ALIGN  10
-#define RIGHT_ALIGN    19
-#define LEFT_ALIGN     0
-
 #define  OFF(pin)  digitalWrite(pin, LOW)
 #define  ON(pin)   digitalWrite(pin, HIGH)
 
