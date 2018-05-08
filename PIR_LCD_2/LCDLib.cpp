@@ -127,3 +127,56 @@ void LCDNoBlink()
 {
 	lcd_main.noBlink();
 }
+
+void LCDPrintPhrase(String Frase)
+{
+	short PhraseLen = Frase.length(), TotRow = 0, TotChar = 0, row = 0, Char = 0, cursor = 0;
+	char Phrase[PhraseLen];
+	
+	if(PhraseLen > 80)
+	{
+		lcd.clear();
+		lcd.setCursor(0,2);
+		lcd.print("Phrase too BIG");
+		delay(2000);
+		return;
+	}
+	Frase.toCharArray(Phrase, PhraseLen);
+	TotChar = PhraseLen;
+	if(PhraseLen <= 20)
+	{
+		TotRow = 1;
+	}
+	else if(PhraseLen > 20 && PhraseLen <= 40)
+	{
+		TotRow = 2;
+	}
+	else if(PhraseLen > 40 && PhraseLen <= 60)
+	{
+		TotRow = 3;
+	}
+	else if(PhraseLen > 60 && PhraseLen <= 80)
+	{
+		TotRow = 4;
+	}	
+	for(row = 0; row < TotRow; row++)
+	{
+		while(Char < TotChar)
+		{
+			lcd.setCursor(cursor, row);
+			lcd.print(Phrase[Char]);
+			Char++;
+			cursor++;
+			if(Char % 20 == 0)
+			{
+				Char++;
+				cursor = 0;
+				break;
+			}
+				
+		}
+	}
+}
+
+
+
