@@ -96,13 +96,13 @@ void MainSetup()
   LCDPrintString(3,CENTER_ALIGN,"Press Ok to enter");
   
   delay(2000);
-  
+  ClearLCD();
   while(!ExitSetup)
   {
 	ButtonPress = ChekButtons();
     delay(BUTTON_PRESS_DELAY);
     // Pulire LCD
-    ClearLCD();
+   
     LCDPrintString(1, CENTER_ALIGN, MainSetupItems[Page].nameMenu);
     
 	switch(ButtonPress)
@@ -114,6 +114,7 @@ void MainSetup()
 			{
 				Page = MIN_MENU_PAGES;
 			}
+			ClearLCD();
 			break;
 		case DOWN:
 		    BlinkLed(YELLOW_LED); // blink giallo
@@ -122,11 +123,13 @@ void MainSetup()
 			{
 				Page = MAX_MENU_PAGES-1;
 			}
+			ClearLCD();
 			break;
 		case OK_EXIT:
 		    BlinkLed(YELLOW_LED); // blink giallo
 			MainMenuPage = Page;
-			ExitSetup = MainSetupItems[Page].MenuFunc();      
+			ExitSetup = MainSetupItems[Page].MenuFunc(); 
+			ClearLCD();			
 			break;
 		default:
 			break;	

@@ -122,6 +122,7 @@ bool ChangeValue()
 			{
 				ChangeDelayAmount = MIN_LIGHT_DELAY;
 			}
+			ClearLCD();
 			break;
 		case DOWN:
 		    BlinkLed(YELLOW_LED); // blink giallo
@@ -130,6 +131,7 @@ bool ChangeValue()
 			{
 				ChangeDelayAmount = MAX_LIGHT_DELAY;
 			}
+			ClearLCD();
 			break;
 		case OK_EXIT:
 		    BlinkLed(YELLOW_LED); // blink giallo
@@ -212,12 +214,14 @@ bool SwichState()
 				SwitchOnOff++;
 				if(SwitchOnOff > 1)
 					SwitchOnOff = TURN_ON;
+				ClearLCD();
 				break;
 			case DOWN:
 				BlinkLed(YELLOW_LED); // blink giallo
 				SwitchOnOff--;
 				if(SwitchOnOff < 0)
 					SwitchOnOff = TURN_OFF;
+				ClearLCD();
 				break;
 			case OK_EXIT:
 				BlinkLed(YELLOW_LED); // blink giallo
@@ -270,7 +274,7 @@ bool ChangeDateTime(short WichBand)
   delay(2000);
   // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di 
   // premere su setup per dare l'ok
-  
+  ClearLCD();
   // CAMBIA ORE
   while(!ExitDateTime)
   {
@@ -279,7 +283,7 @@ bool ChangeDateTime(short WichBand)
 	switch(ChangeState)
 	{	
 		case CHANGE_HOUR:
-			ClearLCD();
+			
 			// Pulire LCD
 			LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
 			LCDPrintString(1,CENTER_ALIGN,"to change the hour");
@@ -298,6 +302,7 @@ bool ChangeDateTime(short WichBand)
 						ChangedTime.hour = 0;
 					else
 						ChangedTime.hour++;
+					ClearLCD();
 					break;
 				case DOWN:
 					BlinkLed(YELLOW_LED); // blink giallo
@@ -307,11 +312,12 @@ bool ChangeDateTime(short WichBand)
 						ChangedTime.hour = 23;
 					else
 						ChangedTime.hour--;
+					ClearLCD();
 					break;
 				case OK_EXIT:
 					BlinkLed(YELLOW_LED); // blink giallo
 					// Scrivere su LCD "Valori salvati"
-					ClearLCD();      
+					ClearLCD();					
 					if(ChangedTime.hour != PresentTime.hour && ChangedTime.hour != BAND_INVALID_VALUE)
 					{
 						LCDPrintString(1, CENTER_ALIGN, "Saved!");
@@ -344,6 +350,7 @@ bool ChangeDateTime(short WichBand)
 					} 
 					ChangeState = CHANGE_MINUTE;
 					delay(1000);
+					ClearLCD();
 					break;
 				default:
 					break;	
@@ -352,7 +359,6 @@ bool ChangeDateTime(short WichBand)
   
   //CAMBIA MINUTI
 		case CHANGE_MINUTE:
-			ClearLCD();
 			// Pulire LCD
 			LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
 			LCDPrintString(1,CENTER_ALIGN,"to change minutes");
@@ -370,6 +376,7 @@ bool ChangeDateTime(short WichBand)
 						ChangedTime.minute = 0;
 					else
 						ChangedTime.minute++;
+					ClearLCD();
 					break;
 				case DOWN:
 					BlinkLed(YELLOW_LED); // blink giallo
@@ -379,7 +386,8 @@ bool ChangeDateTime(short WichBand)
 						ChangedTime.minute = 59;
 					else
 						ChangedTime.minute--;
-						break;
+					ClearLCD();
+					break;
 				case OK_EXIT:
 					BlinkLed(YELLOW_LED); // blink giallo
 					// Scrivere su LCD "Valori salvati"
@@ -416,7 +424,9 @@ bool ChangeDateTime(short WichBand)
 					}           
 					delay(1000);
 					ChangeState = CHANGE_DAY;
+					ClearLCD();
 					break;
+	
 				default:
 					break;	
 			}
@@ -425,7 +435,7 @@ bool ChangeDateTime(short WichBand)
   
   // CAMBIA GIORNO
 		case CHANGE_DAY:
-			ClearLCD();
+
 			// Pulire LCD
 			LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
 			LCDPrintString(1,CENTER_ALIGN,"to change the day");
@@ -443,6 +453,7 @@ bool ChangeDateTime(short WichBand)
 						ChangedTime.day  = 1;
 					else
 						ChangedTime.day++;
+					ClearLCD();
 					break;
 				case DOWN:
 					BlinkLed(YELLOW_LED); // blink giallo
@@ -452,6 +463,7 @@ bool ChangeDateTime(short WichBand)
 						ChangedTime.day = TabDays4Month[PresentTime.month];
 					else
 						ChangedTime.day--;
+					ClearLCD();
 					break;
 				case OK_EXIT:
 					BlinkLed(YELLOW_LED); // blink giallo
@@ -488,6 +500,7 @@ bool ChangeDateTime(short WichBand)
 					}           
 					delay(1000);
 					ChangeState = CHANGE_MONTH;
+					ClearLCD();
 					break;
 				default:
 					break;	
@@ -497,7 +510,6 @@ bool ChangeDateTime(short WichBand)
  
   // CAMBIA MESE
 		case CHANGE_MONTH:
-			ClearLCD();
 			// Pulire LCD
 			LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
 			LCDPrintString(1,CENTER_ALIGN,"to change the month");
@@ -515,7 +527,8 @@ bool ChangeDateTime(short WichBand)
 					else if(ChangedTime.month == BAND_INVALID_VALUE)
 						ChangedTime.month = 1;
 					else
-						ChangedTime.month++;						
+						ChangedTime.month++;	
+					ClearLCD();					
 					break;
 				case DOWN:
 					BlinkLed(YELLOW_LED); // blink giallo
@@ -525,6 +538,7 @@ bool ChangeDateTime(short WichBand)
 						ChangedTime.month = 12;
 					else
 						ChangedTime.month--;
+					ClearLCD();
 					break;
 				case OK_EXIT:
 					BlinkLed(YELLOW_LED); // blink giallo
@@ -562,6 +576,7 @@ bool ChangeDateTime(short WichBand)
 					}           
 					
 					ChangeState = EXIT;
+					ClearLCD();
 					break;
 				default:
 					break;	
@@ -605,7 +620,7 @@ bool InfoScroll()
   LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
   
   delay(2000);
-  
+  ClearLCD();
   while(!ExitInfo)
   {
 	ButtonPress = ChekButtons();
@@ -622,7 +637,6 @@ bool InfoScroll()
 	}
    
     // Pulire LCD
-    ClearLCD();
     LCDPrintString(0, CENTER_ALIGN, EepromTab[Page].eeprom_par_name);
     if(EepromTab[Page].typeMenu == SWITCH_STATE)
     {
@@ -701,6 +715,7 @@ bool InfoScroll()
 			{
 				Page = MONTH_BAND_2;
 			}
+			ClearLCD();
 			break;
 		case DOWN:
 			BlinkLed(YELLOW_LED); // blink giallo
@@ -713,6 +728,7 @@ bool InfoScroll()
 			{
 				Page = HOUR_BAND_1;
 			}
+			ClearLCD();
 			break;
 		case OK_EXIT:
 			BlinkLed(YELLOW_LED); // blink giallo
@@ -728,6 +744,7 @@ bool InfoScroll()
   }
   OFF(GREEN_LED);
   OFF(BLUE_LED);
+  ClearLCD();
   return ExitInfo;
 }
 
