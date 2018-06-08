@@ -14,17 +14,16 @@
 #define MAX_CELL_EEPROM	                  254
 
 #define START_DELAY_ADDR                    0
-#define SWITCH_PIR_ADDR                     5	
-#define MANUAL_STATE_ADDR	                6	
-#define HOUR_BAND_1_ADDR  	               10
-#define HOUR_BAND_2_ADDR  	               11
-#define MINUTE_BAND_1_ADDR	               12
-#define MINUTE_BAND_2_ADDR	               13
-#define DAY_BAND_1_ADDR                    14
-#define DAY_BAND_2_ADDR                    15
-#define MONTH_BAND_1_ADDR                  16
-#define MONTH_BAND_2_ADDR                  17 
-                                           
+#define SWITCH_PIR_ADDR                     5
+#define MANUAL_STATE_ADDR	                6
+
+#define BAND_INITHOUR	                   10
+#define BAND_INITMINUTE	                   11
+#define BAND_INITDAY	                   12
+#define BAND_ENDHOUR	                   13
+#define BAND_ENDMINUTE                     14
+#define BAND_ENDDAY                        15
+
 #define FLAG_VALUE_ADDR                    50
 #define NUM_REG_ADDR                       51
 

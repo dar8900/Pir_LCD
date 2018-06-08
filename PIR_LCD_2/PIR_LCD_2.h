@@ -17,11 +17,10 @@
 #define BAND_INVALID_VALUE 	99
 
 #define NO_BUTTON_PRESS      3
-#define BUTTON_PRESS_DELAY	50
+#define BUTTON_PRESS_DELAY	20
 
 #define RTC_INSERTED
 
-#ifdef RTC_INSERTED
 typedef enum
 {
   CHANGE_VALUE = 0,   // menu dove cambi solo un valore numerico
@@ -30,14 +29,7 @@ typedef enum
   MANUAL_STATE,
   TIME_BAND_NUM
 } MENU_TYPE_NBR;
-#else
-typedef enum
-{
-  CHANGE_VALUE = 0,   // menu dove cambi solo un valore numerico
-  SWITCH_STATE,   // menu dove viene gestito solo lo switch on off per uscite digitali
-  INFO       // menu a scorrimento automatico con tutte le info salvate in eeprom
-} MENU_TYPE_NBR;
-#endif
+
 
 typedef struct
 {
@@ -60,18 +52,8 @@ typedef enum
   DELAY_AMOUNT = 0,
   PIR_STATE,
   MANUAL_LIGHT,
-#ifdef RTC_INSERTED
-  HOUR_BAND_1,
-  HOUR_BAND_2, 
-  MINUTE_BAND_1, 
-  MINUTE_BAND_2, 
-  DAY_BAND_1, 
-  DAY_BAND_2, 
-  MONTH_BAND_1, 
-  MONTH_BAND_2,
-#endif
   MAX_EEPROM_ITEM
- 
+
 }EEPROM_ITEM_ENUM;
 
 enum
@@ -80,7 +62,6 @@ enum
   TURN_OFF
 };
 
-#ifdef RTC_INSERTED
 typedef struct
 {
 	short hour;
@@ -89,7 +70,6 @@ typedef struct
 	short month;
 	short year;
 } TIME_DATE_FORMAT;
-#endif
 
 enum
 {
@@ -105,6 +85,15 @@ enum
   PIR_INPUT         // 10
 };
 
+typedef enum
+{
+    UP = 0,
+    DOWN,
+    OK_EXIT,
+    NOPRESS
+} BUTTONS;
+
+
 typedef struct
 {
 	bool Backlight;
@@ -115,9 +104,6 @@ typedef struct
 	bool ManualState;
 } FLAGS;
 
-enum 
-{
-	UP = 0,
-	DOWN,
-	OK_EXIT
-};
+
+short ChekButtons(void);
+void BlinkLed(short pin);

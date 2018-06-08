@@ -17,31 +17,22 @@ enum
 	CHANGE_BAND_1 = 0,
 	CHANGE_BAND_2,
 	CHEK_BAND,
-	EXIT_CHANGE_BAND	
+	EXIT_CHANGE_BAND
 };
 
 enum
 {
 	BAND_1 = 1,
 	BAND_2
-	
+
 };
 
-
-
-void LCDPrintString(short row, short col, String string);
-void LCDPrintValue(short row, short col, short value);
-void LCDPrintLineVoid(short row);
-void LCDDisplayOn();
-void ClearLCD();
-void BlinkLed(short pin);
-short ChekButtons();
-void TakePresentTime(void);
-
-bool EnterSetupButton();
-bool ChangeTimeBands();
-bool InfoScroll();
-bool SwichState();
-bool ChangeValue();
+void MainScreen(void);
+void MainSetup(void);
+void gestionePIR(short ActivePIR);
+bool ChangeTimeBands(void);
+bool InfoScroll(void);
+bool SwichState(void);
+bool ChangeValue(void);
 
 #endif
