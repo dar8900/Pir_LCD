@@ -7,9 +7,11 @@
 #include "Band.h"
 
 #define LCD_MANUAL_DELAY_TIMER  3000
+#define INFO_SCROLL_DELAY_TIMER  66
 
 extern EEPROM_ITEM EepromTab[];
 extern FLAGS  Flags;
+extern BAND_FORMAT Band;
 
 static const String OnOff[2] = {"On", "Off"};
 
@@ -19,7 +21,7 @@ const CREATE_MENU MainSetupItems[] =
   {"Change light delay", ChangeValue		},
   {"Change PIR state"  , SwichState 		},
   {"Show Info"         , InfoScroll         },
-  {"Manual State"	   , ManualScreen 		},
+  {"Manual State"	   , ManualState 		},
   {"Change Time Bands" , ChangeTimeBands    },
 };
 
@@ -269,14 +271,14 @@ void ManualScreen()
         }
         delay(10);
     }
-
+    return true;
 }
 
 
 void MainSetup()
 {
     bool ExitSetup = false;
-    short Page = MIN_MENU_PAGES;
+    short MenuItem = LIGHT_DELAY;
     short ButtonPress;
 
     OFF(RED_LED);
@@ -299,36 +301,40 @@ void MainSetup()
         delay(BUTTON_PRESS_DELAY);
         // Pulire LCD
 
-        LCDPrintString(TWO, CENTER_ALIGN, MainSetupItems[Page].nameMenu);
+        LCDPrintString(TWO, CENTER_ALIGN, MainSetupItems[MenuItem].nameMenu);
 
         switch(ButtonPress)
         {
             case UP:
                 BlinkLed(YELLOW_LED); // blink giallo
-                Page++;
-                if(Page >= MAX_MENU_PAGES)
+                MenuItem--;
+                if(MenuItem < LIGHT_DELAY)
                 {
-                    Page = MIN_MENU_PAGES;
+                    MenuItem = MAX_MENU_ITEMS - 1;
                 }
                 ClearLCDLine(TWO);
                 break;
             case DOWN:
             BlinkLed(YELLOW_LED); // blink giallo
-                Page--;
-                if(Page < MIN_MENU_PAGES)
+                MenuItem++;
+                if(MenuItem > MAX_MENU_ITEMS - 1)
                 {
-                    Page = MAX_MENU_PAGES-1;
+                    MenuItem = LIGHT_DELAY;
                 }
                 ClearLCDLine(TWO);
                 break;
             case OK_EXIT:
                 BlinkLed(YELLOW_LED); // blink giallo
-                ExitSetup = MainSetupItems[Page].MenuFunc();
+                ExitSetup = true;
                 ClearLCD();
                 break;
             default:
                 break;
         }
+    }
+    if(ExitSetup)
+    {
+        MainSetupItems[MenuItem].MenuFunc();
     }
     OFF(BLUE_LED);
 }
@@ -575,24 +581,114 @@ bool SwichState()
 
 bool InfoScroll()
 {
-    short ButtonPress;
+    short TimerScrollInfo = INFO_SCROLL_DELAY_TIMER, ButtonPress = NOPRESS;
     bool ExitInfo = false;
-    short Page = MIN_INFO_PAGES;
+    MENU_ITEM Page = LIGHT_DELAY;
     short numReg;
     String tmpEepromValue;
     short Minute = 0, Second = 0;
     String TimeStr, DateStr;
+    String BandTime1, BandTime2;
     ON(BLUE_LED);
     // Pulire LCD
     ClearLCD();
-    LCDPrintString(1,CENTER_ALIGN,"Press Up, Down");
-    LCDPrintString(2,CENTER_ALIGN,"to scroll the info");
-    LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
+    while(!ExitInfo)
+    {
+        switch(Page)
+        {
+            case LIGHT_DELAY:
+                LCDPrintString(ONE, CENTER_ALIGN, "The delay for");
+                LCDPrintString(TWO, CENTER_ALIGN, "the light is:");
+                ReadMemory(NUM_REG_ADDR, 1, &numReg);
+                ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
+                if(EepromTab[DELAY_AMOUNT].eeprom_par_value <= 60)
+                {
+                    tmpEepromValue = String(EepromTab[Page].eeprom_par_value);
+                    tmpEepromValue = String(tmpEepromValue + "sec");
+                    LCDPrintString(THREE, CENTER_ALIGN, tmpEepromValue);
 
-    delay(DELAY_MESSAGE_MENU);
+                }
+                else
+                {
+                    Minute = EepromTab[DELAY_AMOUNT].eeprom_par_value / 60;
+                    Second = EepromTab[DELAY_AMOUNT].eeprom_par_value % 60;
+                    if(Second < 10)
+                    {
+                        tmpEepromValue = String(Minute) + ":0" + String(Second) + "min";
+                    }
+                    else
+                    tmpEepromValue = String(Minute) + ":" + String(Second) + "min";
+                    LCDPrintString(THREE, CENTER_ALIGN, tmpEepromValue);
+                }
+                TimerScrollInfo--;
+                if(TimerScrollInfo == 0)
+                {
+                    TimerScrollInfo = INFO_SCROLL_DELAY_TIMER;
+                    Page = PIR_STATE_MENU;
+                    ClearLCD();
+                }
+                break;
+            case PIR_STATE_MENU:
+                LCDPrintString(ONE, CENTER_ALIGN, "The state of");
+                LCDPrintString(TWO, CENTER_ALIGN, "the PIR is:");
+                ReadMemory(EepromTab[PIR_STATE].eeprom_par_value, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
+                LCDPrintString(THREE, CENTER_ALIGN, OnOff[EepromTab[PIR_STATE].eeprom_par_value]);
+                TimerScrollInfo--;
+                if(TimerScrollInfo == 0)
+                {
+                    TimerScrollInfo = INFO_SCROLL_DELAY_TIMER;
+                    Page = TIME_BANDS;
+                    ClearLCD();
+                }
+                break;
+            case TIME_BANDS:
+                if(Flags.IsBandSetted)
+                {
+                    LCDPrintString(TWO, CENTER_ALIGN, "Setted");
+                    LCDPrintString(THREE, CENTER_ALIGN, "The band is:");
+                    BandTime1 = String(Band.InitHour) + ":";
+                    BandTime2 = String(Band.EndHour) + ":";
+                    if(Band.InitMinute < 10)
+                        BandTime1 += "0" + String(Band.InitMinute);
+                    else
+                        BandTime1 += String(Band.InitMinute);
+                    if(Band.EndMinute < 10)
+                        BandTime2 += "0" + String(Band.EndMinute);
+                    else
+                        BandTime2 += String(Band.EndMinute);
+
+                    BandTime1 = BandTime1 + "  " + BandTime2;
+                    LCDPrintString(FOUR, CENTER_ALIGN, BandTime1);
+                }
+                else
+                {
+                    LCDPrintString(TWO, CENTER_ALIGN, "Not setted");
+                }
+                TimerScrollInfo--;
+                if(TimerScrollInfo == 0)
+                {
+                    TimerScrollInfo = INFO_SCROLL_DELAY_TIMER;
+                    Page = LIGHT_DELAY;
+                    ClearLCD();
+                }
+                break;
+            default:
+                break;
+        }
+        ButtonPress = CheckButtons();
+        switch (ButtonPress)
+        {
+            case UP:
+            case DOWN:
+            default:
+                break;
+            case OK_EXIT:
+                ExitInfo = true;
+        }
+        delay(WHILE_LOOP_DELAY);
+    }
     ClearLCD();
-
-    return !ExitInfo;
+    return true;
 }
 
 bool ChangeTimeBands()

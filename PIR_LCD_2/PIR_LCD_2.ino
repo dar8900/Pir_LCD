@@ -13,9 +13,9 @@ FLAGS Flags;
 
 EEPROM_ITEM EepromTab[] =
 {
-  {MIN_LIGHT_DELAY			,  START_DELAY_ADDR       , 1,  "Light delay"   , CHANGE_VALUE},
-  {OFF				    	,  SWITCH_PIR_ADDR        , 1,  "PIR state"     , SWITCH_STATE},
-  {OFF				      	,  MANUAL_STATE_ADDR      , 1,  "Manual state"  , SWITCH_STATE},
+  {MIN_LIGHT_DELAY			,  START_DELAY_ADDR       , 1,  "Light delay"   },
+  {OFF				    	,  SWITCH_PIR_ADDR        , 1,  "PIR state"     },
+  {OFF				      	,  MANUAL_STATE_ADDR      , 1,  "Manual state"  },
 };
 
 
