@@ -6,29 +6,15 @@
 #include "TimeLib.h"
 #include "Band.h"
 
+#define LCD_MANUAL_DELAY_TIMER  3000
 
 extern EEPROM_ITEM EepromTab[];
 extern FLAGS  Flags;
 
 static const String OnOff[2] = {"On", "Off"};
 
-static const short TabDays4Month[] =
-{
-    31,
-    28,
-    31,
-    30,
-    31,
-    30,
-    31,
-    31,
-    30,
-    31,
-    30,
-    31,
-};
 
-CREATE_MENU MainSetupItems[] =
+const CREATE_MENU MainSetupItems[] =
 {
   {"Change light delay", ChangeValue		},
   {"Change PIR state"  , SwichState 		},
@@ -41,48 +27,84 @@ void MainScreen()
 {
     short ButtonPress = NOPRESS, PirState = EepromTab[PIR_STATE].eeprom_par_value;
     bool ShowMsg = false, EnterSetup = false;
-    LCDDisplayOff();
-    ClearLCD();
-    while(!EnterSetup)
+    if(Flags.Backlight)
     {
-        ButtonPress = CheckButtons();
-        switch (ButtonPress)
-        {
-            case UP:
-            case DOWN:
-                BlinkLed(YELLOW_LED);
-                ShowMsg = true;
-                break;
-            case OK_EXIT:
-                BlinkLed(YELLOW_LED);
-                EnterSetup = true;
-                break;
-            default:
-                break;
-        }
-        ButtonPress = NOPRESS;
-        if(ShowMsg)
-        {
-            ClearLCD();
-            LCDDisplayOn();
-            LCDPrintString(1,CENTER_ALIGN,"Press on Enter/Ok");
-            LCDPrintString(2,CENTER_ALIGN,"for enter in");
-            LCDPrintString(3,CENTER_ALIGN,"Main Setup");
-            delay(DELAY_MESSAGE_MENU);
-            ClearLCD();
-            LCDPrintString(1,CENTER_ALIGN,"After the display");
-            LCDPrintString(2,CENTER_ALIGN,"is turned off");
-            delay(DELAY_MESSAGE_MENU);
-            LCDDisplayOff();
-            ClearLCD();
-        }
-        gestionePIR(PirState);
-        delay(WHILE_LOOP_DELAY);
+        ClearLCD();
+        LCDPrintString(1,CENTER_ALIGN,"Press on Enter/Ok");
+        LCDPrintString(2,CENTER_ALIGN,"for enter in");
+        LCDPrintString(3,CENTER_ALIGN,"Main Setup");
+        delay(DELAY_MESSAGE_MENU);
+        ClearLCD();
+        LCDPrintString(1,CENTER_ALIGN,"After the display");
+        LCDPrintString(2,CENTER_ALIGN,"is turned off");
+        delay(DELAY_MESSAGE_MENU);
+        ClearLCD();
+        LCDDisplayOff();
+        Flags.Backlight = false;
     }
-    if(EnterSetup)
+    ClearLCD();
+    if(!CheckBand())
     {
-        EnterSetup = false;
-        MainSetup();
+        while(!EnterSetup)
+        {
+            ButtonPress = CheckButtons();
+            switch (ButtonPress)
+            {
+                case UP:
+                case DOWN:
+                    BlinkLed(YELLOW_LED);
+                    ShowMsg = true;
+                    break;
+                case OK_EXIT:
+                    BlinkLed(YELLOW_LED);
+                    EnterSetup = true;
+                    break;
+                default:
+                    break;
+            }
+            ButtonPress = NOPRESS;
+            if(ShowMsg)
+            {
+                ClearLCD();
+                if(!Flags.Backlight)
+                {
+                    LCDDisplayOn();
+                    Flags.Backlight = true;
+                }
+                LCDPrintString(1,CENTER_ALIGN,"Press on Enter/Ok");
+                LCDPrintString(2,CENTER_ALIGN,"for enter in");
+                LCDPrintString(3,CENTER_ALIGN,"Main Setup");
+                delay(DELAY_MESSAGE_MENU);
+                ClearLCD();
+                LCDPrintString(1,CENTER_ALIGN,"After the display");
+                LCDPrintString(2,CENTER_ALIGN,"is turned off");
+                delay(DELAY_MESSAGE_MENU);
+                if(Flags.Backlight)
+                {
+                    LCDDisplayOff();
+                    Flags.Backlight = false;
+                }
+                ClearLCD();
+                ShowMsg = false;
+            }
+            gestionePIR(PirState);
+            delay(WHILE_LOOP_DELAY);
+        }
+        if(EnterSetup)
+        {
+            EnterSetup = false;
+            MainSetup();
+        }
+    }
+    else
+    {
+        gestionePIR(OFF);
+        if(Flags.Backlight)
+        {
+            LCDDisplayOff();
+            Flags.Backlight = false;
+        }
+        GesLight(OFF);
     }
 }
 
@@ -104,7 +126,7 @@ void gestionePIR(short ActivePIR)
     }
 }
 
-static void GesLight(short LightState)
+void GesLight(short LightState)
 {
 
     if(LightState == ON)
@@ -121,11 +143,12 @@ static void GesLight(short LightState)
 
 void ManualScreen()
 {
-    short ButtonPress = NOPRESS, LightState = OFF, OldLightState = 0, TimerManualExit = 300;
+    short ButtonPress = NOPRESS, LightState = OFF, OldLightState = 0, TimerManualExit = 300, TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
     bool ExitManualState = false, OldValues = false;;
     ReadMemory(LIGHT_STATE_ADDR, 1, &OldLightState);
     ClearLCD();
     LCDDisplayOn();
+    Flags.Backlight = true;
     LCDPrintString(ONE, CENTER_ALIGN, "Manual State");
     LCDPrintString(TWO, CENTER_ALIGN, "The light is:");
     LCDPrintString(FOUR, CENTER_ALIGN, "Press Ok to confirm");
@@ -144,6 +167,13 @@ void ManualScreen()
          {
             case UP:
                 BlinkLed(YELLOW_LED);
+                if(TimerDisplayOn == 0)
+                {
+                    TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
+                    break;
+                }
+                else
+                    TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
                 if(LightState == OFF)
                     LightState = ON;
                 else
@@ -152,6 +182,13 @@ void ManualScreen()
                 break;
             case DOWN:
                 BlinkLed(YELLOW_LED);
+                if(TimerDisplayOn == 0)
+                {
+                    TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
+                    break;
+                }
+                else
+                    TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
                 if(LightState == OFF)
                     LightState = ON;
                 else
@@ -160,6 +197,13 @@ void ManualScreen()
                 break;
             case OK_EXIT:
                 BlinkLed(YELLOW_LED);
+                if(TimerDisplayOn == 0)
+                {
+                    TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
+                    break;
+                }
+                else
+                    TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
                 ReadMemory(LIGHT_STATE_ADDR, 1, &OldLightState);
                 if(LightState != OldLightState)
                     GesLight(LightState);
@@ -177,6 +221,11 @@ void ManualScreen()
         }
         if(ButtonPress == EXIT_MANUAL)
         {
+            if(!Flags.Backlight)
+            {
+                LCDDisplayOn();
+                Flags.Backlight = true;
+            }
             TimerManualExit--;
             if(TimerManualExit == 0)
             {
@@ -189,6 +238,20 @@ void ManualScreen()
                 ExitManualState = true;
                 WriteMemory(MANUAL_STATE_ADDR, OFF);
             }
+        }
+        TimerDisplayOn--;
+        if(TimerDisplayOn == 0 && ButtonPress != EXIT_MANUAL)
+        {
+            if(Flags.Backlight)
+            {
+                LCDDisplayOff();
+                Flags.Backlight = false;
+            }
+        }
+        else
+        {
+            LCDDisplayOn();
+            Flags.Backlight = true;
         }
         delay(10);
     }
@@ -206,7 +269,7 @@ void MainSetup()
     OFF(GREEN_LED);
     ON(BLUE_LED);
     LCDDisplayOn();
-
+    Flags.Backlight = true;
 
     // Pulire LCD
     ClearLCD();
@@ -483,18 +546,6 @@ bool SwichState()
                 {
                     WriteMemory(EepromTab[EepromItem].eeprom_par_addr, SwitchOnOff);
                 }
-                if(SwitchOnOff == ON)
-                {
-                    ON(LIGHT_SWITCH);
-                    Flags.ManualState = true;
-                }
-                else if(SwitchOnOff == OFF)
-                {
-                    OFF(LIGHT_SWITCH);
-                    Flags.ManualState = false;
-                }
-                else
-                OFF(LIGHT_SWITCH);
                 OkSwitch = true;
                 delay(DELAY_MESSAGE_MENU);
                 break;
@@ -516,15 +567,8 @@ bool InfoScroll()
     short numReg;
     String tmpEepromValue;
     short Minute = 0, Second = 0;
-    #ifdef RTC_INSERTED
     String TimeStr, DateStr;
-    #endif
-
-    OFF(RED_LED);
-    ON(GREEN_LED);
     ON(BLUE_LED);
-    LCDDisplayOn();
-
     // Pulire LCD
     ClearLCD();
     LCDPrintString(1,CENTER_ALIGN,"Press Up, Down");
@@ -541,7 +585,6 @@ bool ChangeTimeBands()
 {
     bool BandSetted = false;
     ClearLCD();
-    LCDDisplayOn();
     LCDPrintString(ONE, CENTER_ALIGN, "Set the");
     LCDPrintString(TWO, CENTER_ALIGN, "time band to");
     LCDPrintString(THREE, CENTER_ALIGN, "turn off");

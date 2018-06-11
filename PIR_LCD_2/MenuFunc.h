@@ -14,6 +14,7 @@ enum
 void MainScreen(void);
 void MainSetup(void);
 void gestionePIR(short ActivePIR);
+void GesLight(short LightState);
 void ManualScreen(void);
 bool ChangeTimeBands(void);
 bool InfoScroll(void);

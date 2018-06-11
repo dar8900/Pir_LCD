@@ -86,8 +86,6 @@ static void InitMemory()
 
 void setup()
 {
-
-	Flags.Backlight = false;
 	Flags.ManualState = false;
 
 	Serial.begin(9600);
@@ -112,6 +110,8 @@ void setup()
 	delay(1000);
 	ClearLCD();
     OFF(LIGHT_SWITCH);
+    Flags.Backlight = true;
+    LCDDisplayOn();    
 }
 
 void loop()
