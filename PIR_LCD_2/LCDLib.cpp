@@ -1,5 +1,5 @@
 #include "LCDLib.h"
-#include "SmartPowerStrip.h"
+#include "PIR_LCD_2.h"
 LiquidCrystal_I2C lcd_main(0x27, 20,4);
 
 void LCDInit()
@@ -62,7 +62,7 @@ void LcdTimeWrite(int Time2Write)
 }
 
 // Utilizzano un oggetto di tipo LCD
-void LCDPrintString(LCD_ROWS row, short col, String string)
+void LCDPrintString(short row, short col, String string)
 {
   if(row > MAX_LCD_ROW || string.length() > 20)
   {
@@ -100,7 +100,7 @@ void LCDPrintString(LCD_ROWS row, short col, String string)
 
 }
 
-void LCDPrintValue(LCD_ROWS row, short col, short value)
+void LCDPrintValue(short row, short col, short value)
 {
   String ValStr = String(value);
   if(row > MAX_LCD_ROW || ValStr.length() > 20)

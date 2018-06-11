@@ -3,26 +3,23 @@
 
 #include <Arduino.h>
 
-#undef  NEW_EEPROM
-
-#ifndef NEW_EEPROM
 #define MAX_EEPROM_DIM	      EEPROM.length()
-#else
-#define MAX_EEPROM_DIM				    32766
-#endif
+
 
 #define MAX_CELL_EEPROM	                  254
 
 #define START_DELAY_ADDR                    0
 #define SWITCH_PIR_ADDR                     5
 #define MANUAL_STATE_ADDR	                6
+#define LIGHT_STATE_ADDR                    7
 
-#define BAND_INITHOUR	                   10
-#define BAND_INITMINUTE	                   11
-#define BAND_INITDAY	                   12
-#define BAND_ENDHOUR	                   13
-#define BAND_ENDMINUTE                     14
-#define BAND_ENDDAY                        15
+#define BAND_INIT_HOUR_ADDR	               10
+#define BAND_INIT_MINUTE_ADDR	           11
+#define BAND_INIT_DAY_ADDR	               12
+#define BAND_END_HOUR_ADDR	               13
+#define BAND_END_MINUTE_ADDR               14
+#define BAND_END_DAY_ADDR                  15
+#define BAND_INVALIDATION_VALUE_ADDR       16
 
 #define FLAG_VALUE_ADDR                    50
 #define NUM_REG_ADDR                       51
@@ -34,9 +31,7 @@ bool ReadMemory(short address, short numReg, short *value);
 bool ClearMemory();
 bool IsMemoryEmpty();
 
-#ifdef NEW_EEPROM
-void EepromUpdate(short address, short value)
-#define 	EEPROM.update(address, value)  EepromUpdate(address, value)
-#endif
+void EepromUpdate(short address, short value);
+
 
 #endif

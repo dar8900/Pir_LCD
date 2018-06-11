@@ -14,13 +14,13 @@ FLAGS Flags;
 EEPROM_ITEM EepromTab[] =
 {
   {MIN_LIGHT_DELAY			,  START_DELAY_ADDR       , 1,  "Light delay"   , CHANGE_VALUE},
-  {TURN_OFF					,  SWITCH_PIR_ADDR        , 1,  "PIR state"     , SWITCH_STATE},
-  {TURN_OFF					,  MANUAL_STATE_ADDR      , 1,  "Manual state"  , SWITCH_STATE},
+  {OFF				    	,  SWITCH_PIR_ADDR        , 1,  "PIR state"     , SWITCH_STATE},
+  {OFF				      	,  MANUAL_STATE_ADDR      , 1,  "Manual state"  , SWITCH_STATE},
 };
 
 
 
-short ChekButtons()
+short CheckButtons()
 {
 	short ButtonPress = NOPRESS;
     short buttonUp = LOW, buttonDown = LOW, OkButton = LOW;
@@ -33,6 +33,8 @@ short ChekButtons()
 		ButtonPress = DOWN;
 	if(OkButton == HIGH)
 		ButtonPress = OK_EXIT;
+    if(buttonDown == HIGH && OkButton == HIGH)
+        ButtonPress = EXIT_MANUAL;
 	return ButtonPress;
 }
 
@@ -76,6 +78,7 @@ static void InitMemory()
 		WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_value);
 		WriteMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_value);
 	}
+    EepromUpdate(LIGHT_STATE_ADDR, OFF);
 	return;
 }
 
@@ -105,11 +108,16 @@ void setup()
     RTCInit();
 
 	InitMemory();
+    BandInit();
 	delay(1000);
 	ClearLCD();
+    OFF(LIGHT_SWITCH);
 }
 
 void loop()
 {
-    MainScreen();
+    if(Flags.ManualState)
+        ManualScreen();
+    else
+        MainScreen();
 }

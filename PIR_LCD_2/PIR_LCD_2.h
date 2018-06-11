@@ -14,7 +14,6 @@
 
 #define READ(pin)  digitalRead(pin)
 
-#define BAND_INVALID_VALUE 	99
 
 #define NO_BUTTON_PRESS      3
 #define BUTTON_PRESS_DELAY	20
@@ -56,20 +55,15 @@ typedef enum
 
 }EEPROM_ITEM_ENUM;
 
-enum
-{
-  TURN_ON = 0,
-  TURN_OFF
-};
 
-typedef struct
-{
-	short hour;
-	short minute;
-	short day;
-	short month;
-	short year;
-} TIME_DATE_FORMAT;
+// typedef struct
+// {
+// 	short hour;
+// 	short minute;
+// 	short day;
+// 	short month;
+// 	short year;
+// } TIME_DATE_FORMAT;
 
 enum
 {
@@ -90,6 +84,7 @@ typedef enum
     UP = 0,
     DOWN,
     OK_EXIT,
+    EXIT_MANUAL,
     NOPRESS
 } BUTTONS;
 
@@ -97,13 +92,11 @@ typedef enum
 typedef struct
 {
 	bool Backlight;
-	bool Setup;
-	bool ShowInfo;
-    bool BandOk;
-    bool AllBandsInvalid;
+    bool IsBandSetted;
+    bool BandActive;
 	bool ManualState;
 } FLAGS;
 
 
-short ChekButtons(void);
+short CheckButtons(void);
 void BlinkLed(short pin);

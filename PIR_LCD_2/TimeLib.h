@@ -6,9 +6,6 @@
 #define MINUTE_IN_HOUR 	      59
 #define WHILE_LOOP_DELAY	  30
 
-
-#define PRESENT_DAY_HOUR_MINUTE_SECOND ((PresentTime.day * SEC_IN_DAY) + (PresentTime.hour * SEC_IN_HOUR) + (PresentTime.minute * SEC_IN_MINUTE) + PresentTime.second)
-
 typedef struct
 {
 	short hour;

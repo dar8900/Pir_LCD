@@ -3,33 +3,18 @@
 
 #include <Arduino.h>
 
-enum
-{
-	CHANGE_HOUR = 0,
-	CHANGE_MINUTE,
-	CHANGE_DAY,
-	CHANGE_MONTH,
-	EXIT
-};
+#define DELAY_MESSAGE_MENU  1200
 
 enum
 {
-	CHANGE_BAND_1 = 0,
-	CHANGE_BAND_2,
-	CHEK_BAND,
-	EXIT_CHANGE_BAND
-};
-
-enum
-{
-	BAND_1 = 1,
-	BAND_2
-
+	ON = 0,
+	OFF
 };
 
 void MainScreen(void);
 void MainSetup(void);
 void gestionePIR(short ActivePIR);
+void ManualScreen(void);
 bool ChangeTimeBands(void);
 bool InfoScroll(void);
 bool SwichState(void);

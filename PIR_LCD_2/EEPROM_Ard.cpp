@@ -52,7 +52,7 @@ int WriteMemory(short address, short value)
         numReg = 0;
       }
     }
-    
+
     for(short idx = 0; idx < numReg; idx++)
     {
       if(numReg == 0)
@@ -74,10 +74,10 @@ int WriteMemory(short address, short value)
         }
         else
         {
-          EEPROM.write(address, value);     
-        }       
+          EEPROM.write(address, value);
+        }
       }
-    }   
+    }
   }
   else
   {
@@ -88,7 +88,7 @@ int WriteMemory(short address, short value)
  {
    EEPROM.update(NUM_REG_ADDR, numReg);
  }
-  
+
   return  numReg;
 }
 
@@ -100,30 +100,30 @@ bool ReadMemory(short address, short numReg, short *value)
   if(address == START_DELAY_ADDR)
   {
 	  FlagValueBig = EEPROM.read(FLAG_VALUE_ADDR);
-	  
+
 	  if(!FlagValueBig)
 	  {
 		 ValueRead = EEPROM.read(address);
-		 ReadOk = true;      
+		 ReadOk = true;
 	  }
 	  else
 	  {
 		for(short idx = 0; idx < numReg; idx++)
 		{
-		  ValueRead += EEPROM.read(address + idx);      
+		  ValueRead += EEPROM.read(address + idx);
 		}
 		ReadOk = true;
-	  }	  
+	  }
   }
   else
   {
 	ValueRead = EEPROM.read(address);
-	ReadOk = true;   	  
+	ReadOk = true;
   }
 
   if(ReadOk)
   {
-    *value = ValueRead;   
+    *value = ValueRead;
   }
   return ReadOk;
 }
@@ -146,19 +146,18 @@ bool IsMemoryEmpty()
 	{
 		Value = EEPROM.read(i);
 		if(Value != 255)
-			Empty = false;		
-		
+			Empty = false;
+
 	}
 	return Empty;
 }
 
 
-#ifdef NEW_EEPROM
+
 void EepromUpdate(short address, short value)
 {
-	if(eeprom.read(address) != value)
+	if(EEPROM.read(address) != value)
 	{
-		eeprom.write(address, value);
+		EEPROM.write(address, value);
 	}
 }
-#endif

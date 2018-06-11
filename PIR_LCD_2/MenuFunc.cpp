@@ -4,11 +4,10 @@
 #include "MenuFunc.h"
 #include "LCDLib.h"
 #include "TimeLib.h"
+#include "Band.h"
 
-#define DELAY_MESSAGE_MENU  1200
 
 extern EEPROM_ITEM EepromTab[];
-extern short MainMenuPage;
 extern FLAGS  Flags;
 
 static const String OnOff[2] = {"On", "Off"};
@@ -34,7 +33,7 @@ CREATE_MENU MainSetupItems[] =
   {"Change light delay", ChangeValue		},
   {"Change PIR state"  , SwichState 		},
   {"Show Info"         , InfoScroll         },
-  {"Manual State"	   , SwichState 		},
+  {"Manual State"	   , ManualScreen 		},
   {"Change Time Bands" , ChangeTimeBands    },
 };
 
@@ -49,13 +48,17 @@ void MainScreen()
         ButtonPress = CheckButtons();
         switch (ButtonPress)
         {
-            case BUTTONUP:
-            case BUTTONDOWN:
-            ShowMsg = true;
-            break;
-            case BUTTONSET:
-            EnterSetup = true;
-            break;
+            case UP:
+            case DOWN:
+                BlinkLed(YELLOW_LED);
+                ShowMsg = true;
+                break;
+            case OK_EXIT:
+                BlinkLed(YELLOW_LED);
+                EnterSetup = true;
+                break;
+            default:
+                break;
         }
         ButtonPress = NOPRESS;
         if(ShowMsg)
@@ -86,7 +89,7 @@ void MainScreen()
 void gestionePIR(short ActivePIR)
 {
     short StatePir = LOW, TimeDelay = 0, numReg = 0;
-    if(ActivePIR == TURN_ON)
+    if(ActivePIR == ON)
     {
         StatePir = READ(PIR_INPUT);
         if(StatePir == HIGH)
@@ -99,6 +102,97 @@ void gestionePIR(short ActivePIR)
             OFF(LIGHT_SWITCH);
         }
     }
+}
+
+static void GesLight(short LightState)
+{
+
+    if(LightState == ON)
+    {
+        ON(LIGHT_SWITCH);
+        EepromUpdate(LIGHT_STATE_ADDR, ON);
+    }
+    else
+    {
+        OFF(LIGHT_SWITCH);
+        EepromUpdate(LIGHT_STATE_ADDR, OFF);
+    }
+}
+
+void ManualScreen()
+{
+    short ButtonPress = NOPRESS, LightState = OFF, OldLightState = 0, TimerManualExit = 300;
+    bool ExitManualState = false, OldValues = false;;
+    ReadMemory(LIGHT_STATE_ADDR, 1, &OldLightState);
+    ClearLCD();
+    LCDDisplayOn();
+    LCDPrintString(ONE, CENTER_ALIGN, "Manual State");
+    LCDPrintString(TWO, CENTER_ALIGN, "The light is:");
+    LCDPrintString(FOUR, CENTER_ALIGN, "Press Ok to confirm");
+    while(!ExitManualState)
+    {
+        if(OldValues)
+        {
+            LCDPrintString(ONE, CENTER_ALIGN, "Manual State");
+            LCDPrintString(TWO, CENTER_ALIGN, "The light is:");
+            LCDPrintString(FOUR, CENTER_ALIGN, "Press Ok to confirm");
+            OldValues = false;
+        }
+        LCDPrintString(THREE, CENTER_ALIGN, OnOff[LightState]);
+        ButtonPress = CheckButtons();
+        switch (ButtonPress)
+         {
+            case UP:
+                BlinkLed(YELLOW_LED);
+                if(LightState == OFF)
+                    LightState = ON;
+                else
+                    LightState = OFF;
+                ClearLCDLine(THREE);
+                break;
+            case DOWN:
+                BlinkLed(YELLOW_LED);
+                if(LightState == OFF)
+                    LightState = ON;
+                else
+                    LightState = OFF;
+                ClearLCDLine(THREE);
+                break;
+            case OK_EXIT:
+                BlinkLed(YELLOW_LED);
+                ReadMemory(LIGHT_STATE_ADDR, 1, &OldLightState);
+                if(LightState != OldLightState)
+                    GesLight(LightState);
+                else
+                {
+                    ClearLCD();
+                    LCDPrintString(ONE, CENTER_ALIGN, "The light is");
+                    LCDPrintString(TWO, CENTER_ALIGN, "already");
+                    LCDPrintString(THREE, CENTER_ALIGN, OnOff[LightState]);
+                    delay(DELAY_MESSAGE_MENU);
+                    ClearLCD();
+                    OldValues = true;
+                }
+                break;
+        }
+        if(ButtonPress == EXIT_MANUAL)
+        {
+            TimerManualExit--;
+            if(TimerManualExit == 0)
+            {
+                ClearLCD();
+                LCDPrintString(TWO, CENTER_ALIGN, "Exit from");
+                LCDPrintString(THREE, CENTER_ALIGN, "manual state");
+                delay(DELAY_MESSAGE_MENU);
+                ClearLCD();
+                Flags.ManualState = false;
+                ExitManualState = true;
+                WriteMemory(MANUAL_STATE_ADDR, OFF);
+            }
+        }
+        delay(10);
+    }
+
 }
 
 
@@ -124,7 +218,7 @@ void MainSetup()
     ClearLCD();
     while(!ExitSetup)
     {
-        ButtonPress = ChekButtons();
+        ButtonPress = CheckButtons();
         delay(BUTTON_PRESS_DELAY);
         // Pulire LCD
 
@@ -152,7 +246,6 @@ void MainSetup()
                 break;
             case OK_EXIT:
                 BlinkLed(YELLOW_LED); // blink giallo
-                MainMenuPage = Page;
                 ExitSetup = MainSetupItems[Page].MenuFunc();
                 ClearLCD();
                 break;
@@ -161,6 +254,59 @@ void MainSetup()
         }
     }
     OFF(BLUE_LED);
+}
+
+bool ManualState()
+{
+    short ButtonPress = NOPRESS, SwitchOnOff = OFF;
+    bool ExitSetManual = false;
+    ClearLCD();
+    LCDPrintString(ONE, CENTER_ALIGN, "Set the");
+    LCDPrintString(TWO, CENTER_ALIGN, "manual state:");
+    while(!ExitSetManual)
+    {
+        LCDPrintString(THREE, CENTER_ALIGN, OnOff[SwitchOnOff]);
+        ButtonPress = CheckButtons();
+        switch(ButtonPress)
+        {
+            case UP:
+                BlinkLed(YELLOW_LED);
+                if(SwitchOnOff == OFF)
+                    SwitchOnOff = ON;
+                else
+                    SwitchOnOff = OFF;
+                ClearLCDLine(THREE);
+                break;
+            case DOWN:
+                BlinkLed(YELLOW_LED);
+                if(SwitchOnOff == OFF)
+                    SwitchOnOff = ON;
+                else
+                    SwitchOnOff = OFF;
+                ClearLCDLine(THREE);
+                break;
+            case OK_EXIT:
+                BlinkLed(YELLOW_LED);
+                ClearLCDLine(THREE);
+                LCDPrintString(THREE, CENTER_ALIGN, "Setted!");
+                ClearLCD();
+                if(SwitchOnOff == ON)
+                {
+                    Flags.ManualState = true;
+                    WriteMemory(MANUAL_STATE_ADDR, ON);
+                }
+                else
+                {
+                    Flags.ManualState = false;
+                    WriteMemory(MANUAL_STATE_ADDR, OFF);
+                }
+                ExitSetManual = true;
+                break;
+            default:
+                break;
+        }
+    }
+    return true;
 }
 
 bool ChangeValue()
@@ -187,7 +333,7 @@ bool ChangeValue()
     ClearLCD();
     while(!OkButton)
     {
-        ButtonPress = ChekButtons();
+        ButtonPress = CheckButtons();
         delay(BUTTON_PRESS_DELAY);
         // Pulire LCD
 
@@ -280,21 +426,10 @@ bool SwichState()
     short ButtonPress;
     short EepromItem;
     bool OkSwitch = false;
-    switch(MainMenuPage)
-    {
-        case SWITCH_STATE:
-        EepromItem = PIR_STATE;
-        break;
-        case MANUAL_STATE:
-        EepromItem = MANUAL_LIGHT;
-        break;
-        default:
-        EepromItem = PIR_STATE;
-        break;
-    }
+    EepromItem = PIR_STATE;
     ReadMemory(EepromTab[EepromItem].eeprom_par_value, EepromTab[EepromItem].eeprom_par_numReg, &EepromTab[EepromItem].eeprom_par_value);
     short OldSwitch = EepromTab[EepromItem].eeprom_par_value;
-    short SwitchOnOff = TURN_OFF;
+    short SwitchOnOff = OFF;
 
     // Pulire LCD
     ClearLCD();
@@ -309,7 +444,7 @@ bool SwichState()
     ClearLCD();
     while(!OkSwitch)
     {
-        ButtonPress = ChekButtons();
+        ButtonPress = CheckButtons();
         delay(BUTTON_PRESS_DELAY);
         // Pulire LCD
         LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
@@ -323,46 +458,48 @@ bool SwichState()
         switch(ButtonPress)
         {
             case UP:
-            BlinkLed(YELLOW_LED); // blink giallo
-            SwitchOnOff++;
-            if(SwitchOnOff > 1)
-            SwitchOnOff = TURN_ON;
-            ClearLCD();
-            break;
+                BlinkLed(YELLOW_LED);
+                if(SwitchOnOff == OFF)
+                    SwitchOnOff = ON;
+                else
+                    SwitchOnOff = OFF;
+                ClearLCDLine(THREE);
+                break;
             case DOWN:
-            BlinkLed(YELLOW_LED); // blink giallo
-            SwitchOnOff--;
-            if(SwitchOnOff < 0)
-            SwitchOnOff = TURN_OFF;
-            ClearLCD();
-            break;
+                BlinkLed(YELLOW_LED);
+                if(SwitchOnOff == OFF)
+                    SwitchOnOff = ON;
+                else
+                    SwitchOnOff = OFF;
+                ClearLCDLine(THREE);
+                break;
             case OK_EXIT:
-            BlinkLed(YELLOW_LED); // blink giallo
-            // Scrivere su LCD "Valori salvati"
-            ClearLCD();
-            LCDPrintString(1, CENTER_ALIGN, "The state is");
-            LCDPrintString(2, CENTER_ALIGN, OnOff[SwitchOnOff]);
-            if(SwitchOnOff != OldSwitch)
-            {
-                WriteMemory(EepromTab[EepromItem].eeprom_par_addr, SwitchOnOff);
-            }
-            if(MainMenuPage == MANUAL_STATE && SwitchOnOff == TURN_ON)
-            {
-                ON(LIGHT_SWITCH);
-                Flags.ManualState = true;
-            }
-            else if(MainMenuPage == MANUAL_STATE && SwitchOnOff == TURN_OFF)
-            {
+                BlinkLed(YELLOW_LED); // blink giallo
+                // Scrivere su LCD "Valori salvati"
+                ClearLCD();
+                LCDPrintString(1, CENTER_ALIGN, "The state is");
+                LCDPrintString(2, CENTER_ALIGN, OnOff[SwitchOnOff]);
+                if(SwitchOnOff != OldSwitch)
+                {
+                    WriteMemory(EepromTab[EepromItem].eeprom_par_addr, SwitchOnOff);
+                }
+                if(SwitchOnOff == ON)
+                {
+                    ON(LIGHT_SWITCH);
+                    Flags.ManualState = true;
+                }
+                else if(SwitchOnOff == OFF)
+                {
+                    OFF(LIGHT_SWITCH);
+                    Flags.ManualState = false;
+                }
+                else
                 OFF(LIGHT_SWITCH);
-                Flags.ManualState = false;
-            }
-            else
-            OFF(LIGHT_SWITCH);
-            OkSwitch = true;
-            delay(DELAY_MESSAGE_MENU);
-            break;
+                OkSwitch = true;
+                delay(DELAY_MESSAGE_MENU);
+                break;
             default:
-            break;
+                break;
         }
     }
     OFF(BLUE_LED);
@@ -370,341 +507,6 @@ bool SwichState()
     return OkSwitch;
 
 }
-
-
-
-bool ChangeDateTime(short WichBand)
-{
-    short ButtonPress;
-    bool ExitDateTime = false;
-    TIME_DATE_FORMAT ChangedTime;
-    // DATE_FORMAT ChangedDate;
-    short   ChangeState = CHANGE_HOUR;
-    ChangedTime = PresentTime;
-    // ChangedDate = PresentDate;
-    ON(BLUE_LED);
-    ON(RED_LED);
-    // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di
-    // premere su setup per dare l'ok
-    ClearLCD();
-    // CAMBIA ORE
-    while(!ExitDateTime)
-    {
-        ButtonPress = ChekButtons();
-        delay(BUTTON_PRESS_DELAY);
-        switch(ChangeState)
-        {
-            case CHANGE_HOUR:
-
-            // Pulire LCD
-            LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-            LCDPrintString(1,CENTER_ALIGN,"to change the hour");
-            LCDPrintString(2,CENTER_ALIGN,"Press Ok to exit");
-            LCDPrintValue(3, CENTER_ALIGN, ChangedTime.hour);
-
-            // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di
-            // premere su setup per dare l'ok
-            switch(ButtonPress)
-            {
-                case UP:
-                BlinkLed(YELLOW_LED); // blink giallo
-                if(ChangedTime.hour == 23)
-                ChangedTime.hour = BAND_INVALID_VALUE;
-                else if(ChangedTime.hour == BAND_INVALID_VALUE)
-                ChangedTime.hour = 0;
-                else
-                ChangedTime.hour++;
-                ClearLCD();
-                break;
-                case DOWN:
-                BlinkLed(YELLOW_LED); // blink giallo
-                if(ChangedTime.hour == 0)
-                ChangedTime.hour = BAND_INVALID_VALUE;
-                else if(ChangedTime.hour == BAND_INVALID_VALUE)
-                ChangedTime.hour = 23;
-                else
-                ChangedTime.hour--;
-                ClearLCD();
-                break;
-                case OK_EXIT:
-                BlinkLed(YELLOW_LED); // blink giallo
-                // Scrivere su LCD "Valori salvati"
-                ClearLCD();
-                if(ChangedTime.hour != PresentTime.hour && ChangedTime.hour != BAND_INVALID_VALUE)
-                {
-                    LCDPrintString(1, CENTER_ALIGN, "Saved!");
-                    // scrivere il nuovo orario
-                    if(WichBand == 1)
-                    Band_1.hour = ChangedTime.hour;
-                    else
-                    Band_2.hour = ChangedTime.hour;
-                }
-                else if(ChangedTime.hour != PresentTime.hour && ChangedTime.hour == BAND_INVALID_VALUE)
-                {
-                    LCDPrintString(0, CENTER_ALIGN, "Saved!");
-                    LCDPrintString(1, CENTER_ALIGN, "Invalidated value");
-                    LCDPrintString(2, CENTER_ALIGN, "This will turn OFF");
-                    LCDPrintString(3, CENTER_ALIGN, "the sensor");
-                    delay(DELAY_MESSAGE_MENU);
-                    // scrivere il nuovo orario
-                    if(WichBand == 1)
-                    Band_1.hour = ChangedTime.hour;
-                    else
-                    Band_2.hour = ChangedTime.hour;
-                }
-                else
-                {
-                    LCDPrintString(1, CENTER_ALIGN, "Unchanged");
-                    if(WichBand == 1)
-                    Band_1.hour = ChangedTime.hour;
-                    else
-                    Band_2.hour = ChangedTime.hour;
-                }
-                ChangeState = CHANGE_MINUTE;
-                delay(DELAY_MESSAGE_MENU);
-                ClearLCD();
-                break;
-                default:
-                break;
-            }
-            break;
-
-            //CAMBIA MINUTI
-            case CHANGE_MINUTE:
-            // Pulire LCD
-            LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-            LCDPrintString(1,CENTER_ALIGN,"to change minutes");
-            LCDPrintString(2,CENTER_ALIGN,"Press Ok to exit");
-            LCDPrintValue(3, CENTER_ALIGN, ChangedTime.minute);
-            // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di
-            // premere su setup per dare l'ok
-            switch(ButtonPress)
-            {
-                case UP:
-                BlinkLed(YELLOW_LED); // blink giallo
-                if(ChangedTime.minute == 59)
-                ChangedTime.minute = BAND_INVALID_VALUE;
-                else if(ChangedTime.minute == BAND_INVALID_VALUE)
-                ChangedTime.minute = 0;
-                else
-                ChangedTime.minute++;
-                ClearLCD();
-                break;
-                case DOWN:
-                BlinkLed(YELLOW_LED); // blink giallo
-                if(ChangedTime.minute == 0)
-                ChangedTime.minute = BAND_INVALID_VALUE;
-                else if(ChangedTime.minute == BAND_INVALID_VALUE)
-                ChangedTime.minute = 59;
-                else
-                ChangedTime.minute--;
-                ClearLCD();
-                break;
-                case OK_EXIT:
-                BlinkLed(YELLOW_LED); // blink giallo
-                // Scrivere su LCD "Valori salvati"
-                ClearLCD();
-                if(ChangedTime.minute != PresentTime.minute && ChangedTime.minute != BAND_INVALID_VALUE)
-                {
-                    LCDPrintString(1, CENTER_ALIGN, "Saved!");
-                    // scrivere il nuovo orario
-                    if(WichBand == 1)
-                    Band_1.minute = ChangedTime.minute;
-                    else
-                    Band_2.minute = ChangedTime.minute;
-                }
-                else if(ChangedTime.minute != PresentTime.minute && ChangedTime.minute == BAND_INVALID_VALUE)
-                {
-                    LCDPrintString(0, CENTER_ALIGN, "Saved!");
-                    LCDPrintString(1, CENTER_ALIGN, "Invalidated value");
-                    LCDPrintString(2, CENTER_ALIGN, "This will turn OFF");
-                    LCDPrintString(3, CENTER_ALIGN, "the sensor");
-                    delay(DELAY_MESSAGE_MENU);
-                    // scrivere il nuovo orario
-                    if(WichBand == 1)
-                    Band_1.minute = ChangedTime.minute;
-                    else
-                    Band_2.minute = ChangedTime.minute;
-                }
-                else
-                {
-                    LCDPrintString(1, CENTER_ALIGN, "Unchanged");
-                    if(WichBand == 1)
-                    Band_1.minute = ChangedTime.minute;
-                    else
-                    Band_2.minute = ChangedTime.minute;
-                }
-                delay(DELAY_MESSAGE_MENU);
-                ChangeState = CHANGE_DAY;
-                ClearLCD();
-                break;
-
-                default:
-                break;
-            }
-            break;
-
-
-            // CAMBIA GIORNO
-            case CHANGE_DAY:
-
-            // Pulire LCD
-            LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-            LCDPrintString(1,CENTER_ALIGN,"to change the day");
-            LCDPrintString(2,CENTER_ALIGN,"Press Ok to exit");
-            LCDPrintValue(3, CENTER_ALIGN, ChangedTime.day);
-            // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di
-            // premere su setup per dare l'ok
-            switch(ButtonPress)
-            {
-                case UP:
-                BlinkLed(YELLOW_LED); // blink giallo
-                if(ChangedTime.day == TabDays4Month[PresentTime.month])
-                ChangedTime.day  = BAND_INVALID_VALUE;
-                else if(ChangedTime.day == BAND_INVALID_VALUE)
-                ChangedTime.day  = 1;
-                else
-                ChangedTime.day++;
-                ClearLCD();
-                break;
-                case DOWN:
-                BlinkLed(YELLOW_LED); // blink giallo
-                if(ChangedTime.day == 1)
-                ChangedTime.day  = BAND_INVALID_VALUE;
-                else if(ChangedTime.day == BAND_INVALID_VALUE)
-                ChangedTime.day = TabDays4Month[PresentTime.month];
-                else
-                ChangedTime.day--;
-                ClearLCD();
-                break;
-                case OK_EXIT:
-                BlinkLed(YELLOW_LED); // blink giallo
-                // Scrivere su LCD "Valori salvati"
-                ClearLCD();
-                if(ChangedTime.day != PresentTime.day && ChangedTime.day != BAND_INVALID_VALUE)
-                {
-                    LCDPrintString(1, CENTER_ALIGN, "Saved!");
-                    // scrivere il nuovo orario
-                    if(WichBand == 1)
-                    Band_1.day = ChangedTime.day;
-                    else
-                    Band_2.day = ChangedTime.day;
-                }
-                else if(ChangedTime.day != PresentTime.day && ChangedTime.day == BAND_INVALID_VALUE)
-                {
-                    LCDPrintString(0, CENTER_ALIGN, "Saved!");
-                    LCDPrintString(1, CENTER_ALIGN, "Invalidated value");
-                    LCDPrintString(2, CENTER_ALIGN, "This will turn OFF");
-                    LCDPrintString(3, CENTER_ALIGN, "the sensor");
-                    delay(DELAY_MESSAGE_MENU);
-                    if(WichBand == 1)
-                    Band_1.day = ChangedTime.day;
-                    else
-                    Band_2.day = ChangedTime.day;
-                }
-                else
-                {
-                    LCDPrintString(1, CENTER_ALIGN, "Unchanged");
-                    if(WichBand == 1)
-                    Band_1.day = ChangedTime.day;
-                    else
-                    Band_2.day = ChangedTime.day;
-                }
-                delay(DELAY_MESSAGE_MENU);
-                ChangeState = CHANGE_MONTH;
-                ClearLCD();
-                break;
-                default:
-                break;
-            }
-            break;
-
-
-            // CAMBIA MESE
-            case CHANGE_MONTH:
-            // Pulire LCD
-            LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-            LCDPrintString(1,CENTER_ALIGN,"to change the month");
-            LCDPrintString(2,CENTER_ALIGN,"Press Ok to exit");
-            LCDPrintValue(3, CENTER_ALIGN, ChangedTime.month);
-            // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di
-            // premere su setup per dare l'ok
-            switch(ButtonPress)
-            {
-                case UP:
-                BlinkLed(YELLOW_LED); // blink giallo
-
-                if(ChangedTime.month == 12)
-                ChangedTime.month  = BAND_INVALID_VALUE;
-                else if(ChangedTime.month == BAND_INVALID_VALUE)
-                ChangedTime.month = 1;
-                else
-                ChangedTime.month++;
-                ClearLCD();
-                break;
-                case DOWN:
-                BlinkLed(YELLOW_LED); // blink giallo
-                if(ChangedTime.month == 1)
-                ChangedTime.month  = BAND_INVALID_VALUE;
-                else if(ChangedTime.month == BAND_INVALID_VALUE)
-                ChangedTime.month = 12;
-                else
-                ChangedTime.month--;
-                ClearLCD();
-                break;
-                case OK_EXIT:
-                BlinkLed(YELLOW_LED); // blink giallo
-                // Scrivere su LCD "Valori salvati"
-                ClearLCD();
-                if(ChangedTime.month != PresentTime.month && ChangedTime.month != BAND_INVALID_VALUE)
-                {
-                    LCDPrintString(1, CENTER_ALIGN, "Saved!");
-                    // scrivere il nuovo orario
-                    if(WichBand == 1)
-                    Band_1.month = ChangedTime.month;
-                    else
-                    Band_2.month = ChangedTime.month;
-                }
-                else if(ChangedTime.month != PresentTime.month && ChangedTime.month == BAND_INVALID_VALUE)
-                {
-                    LCDPrintString(0, CENTER_ALIGN, "Saved!");
-                    LCDPrintString(1, CENTER_ALIGN, "Invalidated value");
-                    LCDPrintString(2, CENTER_ALIGN, "This will turn OFF");
-                    LCDPrintString(3, CENTER_ALIGN, "the sensor");
-                    delay(DELAY_MESSAGE_MENU);
-                    // scrivere il nuovo orario
-                    if(WichBand == 1)
-                    Band_1.month = ChangedTime.month;
-                    else
-                    Band_2.month = ChangedTime.month;
-                }
-                else
-                {
-                    LCDPrintString(1, CENTER_ALIGN, "Unchanged");
-                    if(WichBand == 1)
-                    Band_1.month = ChangedTime.month;
-                    else
-                    Band_2.month = ChangedTime.month;
-                }
-
-                ChangeState = EXIT;
-                ClearLCD();
-                break;
-                default:
-                break;
-            }
-            break;
-            case EXIT:
-            ExitDateTime = true;
-            break;
-            default:
-            ChangeState = CHANGE_HOUR;
-            break;
-        }
-    }
-    return ExitDateTime;
-}
-
 
 bool InfoScroll()
 {
@@ -737,8 +539,37 @@ bool InfoScroll()
 
 bool ChangeTimeBands()
 {
+    bool BandSetted = false;
     ClearLCD();
     LCDDisplayOn();
+    LCDPrintString(ONE, CENTER_ALIGN, "Set the");
+    LCDPrintString(TWO, CENTER_ALIGN, "time band to");
+    LCDPrintString(THREE, CENTER_ALIGN, "turn off");
+    LCDPrintString(FOUR, CENTER_ALIGN, "the sensor");
+    delay(DELAY_MESSAGE_MENU+800);
+    ClearLCD();
+    while(!BandSetted)
+    {
+        if(SetTimeBand())
+        {
+            if(IsBandCorrect())
+            {
+                Flags.IsBandSetted = true;
+                BandSetted = true;
+            }
+        }
+        else
+        {
+            ClearLCD();
+            LCDPrintString(ONE, CENTER_ALIGN, "Error!");
+            LCDPrintString(ONE, CENTER_ALIGN, "Repeat the");
+            LCDPrintString(ONE, CENTER_ALIGN, "procedure");
+            delay(DELAY_MESSAGE_MENU);
+            ClearLCD();
+            Flags.IsBandSetted = false;
+            BandSetted = false;
+        }
+    }
 
     return true;
 }

@@ -33,7 +33,7 @@ void RTCInit()
 	{
 		while (1)
 		{
-			BlinkLed(BUTTON_LED);
+			BlinkLed(YELLOW_LED);
             delay(5);
 		}
 	}
@@ -56,13 +56,12 @@ bool ChangeTime()
 	TakePresentTime();
 	short Hour = PresentTime.hour, Minute = PresentTime.minute, Month = PresentTime.month, Day = PresentTime.day, Year = PresentTime.year;
     short TimeSM = CHANGE_HOUR;
-	short ButtonPress = NO_PRESS;
+	short ButtonPress = NOPRESS;
 	bool ExitTimeChange = false;
 	String MinuteStr;
 	ClearLCD();
 	while(!ExitTimeChange)
 	{
-		CheckEvents();
 		LCDPrintString(ONE, CENTER_ALIGN, "Cambia orario");
 		ButtonPress = CheckButtons();
 		switch(TimeSM)
@@ -72,25 +71,24 @@ bool ChangeTime()
 				LCDPrintValue(THREE, CENTER_ALIGN, Hour);
 				switch(ButtonPress)
 				{
-					case BUTTON_UP:
+					case UP:
 						if(Hour > 0)
 							Hour--;
 						else
 							Hour = HOUR_IN_DAY;
 						ClearLCDLine(THREE);
 						break;
-					case BUTTON_DOWN:
+					case DOWN:
 						if(Hour < HOUR_IN_DAY)
 							Hour++;
 						else
 							Hour = 0;
 						ClearLCDLine(THREE);
 						break;
-					case BUTTON_SET:
+					case OK_EXIT:
 						TimeSM = CHANGE_MINUTE;
 						ClearLCD();
 						break;
-					case BUTTON_LEFT:
 					default:
 						break;
 				}
@@ -108,25 +106,24 @@ bool ChangeTime()
 				LCDPrintString(THREE, CENTER_ALIGN, MinuteStr);
 				switch(ButtonPress)
 				{
-					case BUTTON_UP:
+					case UP:
 						if(Minute > 0)
 							Minute--;
 						else
 							Minute = MINUTE_IN_HOUR;
 						ClearLCDLine(THREE);
 						break;
-					case BUTTON_DOWN:
+					case DOWN:
 						if(Minute < MINUTE_IN_HOUR)
 							Minute++;
 						else
 							Minute = 0;
 						ClearLCDLine(THREE);
 						break;
-					case BUTTON_SET:
+					case OK_EXIT:
 						TimeSM = CHANGE_YEAR;
 						ClearLCD();
 						break;
-					case BUTTON_LEFT:
 					default:
 						break;
 				}
@@ -136,25 +133,24 @@ bool ChangeTime()
                     LCDPrintValue(THREE, CENTER_ALIGN, Year);
                     switch(ButtonPress)
                     {
-                        case BUTTON_UP:
+                        case UP:
                             if(Year > 2018)
                                 Year--;
                             else
                                 Year = 2099;
                             ClearLCDLine(THREE);
                             break;
-                        case BUTTON_DOWN:
+                        case DOWN:
                             if(Year < 2099)
                                 Year++;
                             else
                                 Year = 2018;
                             ClearLCDLine(THREE);
                             break;
-                        case BUTTON_SET:
+                        case OK_EXIT:
                             TimeSM = CHANGE_MONTH;
                             ClearLCD();
                             break;
-                        case BUTTON_LEFT:
                         default:
                             break;
                     }
@@ -164,25 +160,24 @@ bool ChangeTime()
 				LCDPrintValue(THREE, CENTER_ALIGN, Month);
 				switch(ButtonPress)
 				{
-					case BUTTON_UP:
+					case UP:
 						if(Month > 1)
 							Month--;
 						else
 							Month = 12;
 						ClearLCDLine(THREE);
 						break;
-					case BUTTON_DOWN:
+					case DOWN:
 						if(Month < 12)
 							Month++;
 						else
 							Month = 1;
 						ClearLCDLine(THREE);
 						break;
-					case BUTTON_SET:
+					case OK_EXIT:
 						TimeSM = CHANGE_DAY;
 						ClearLCD();
 						break;
-					case BUTTON_LEFT:
 					default:
 						break;
 				}
@@ -192,7 +187,7 @@ bool ChangeTime()
 				LCDPrintValue(THREE, CENTER_ALIGN, Day);
 				switch(ButtonPress)
 				{
-					case BUTTON_UP:
+					case UP:
 						if(Day > 1)
 							Day--;
 						else
@@ -211,7 +206,7 @@ bool ChangeTime()
 
 						ClearLCDLine(THREE);
 						break;
-					case BUTTON_DOWN:
+					case DOWN:
                         if(Year % 100 == 0 && Year % 400 == 0 && Month == 2)
                         {
                             if(Day < TabDays4Month[12])
@@ -235,11 +230,10 @@ bool ChangeTime()
                         }
 						ClearLCDLine(THREE);
 						break;
-					case BUTTON_SET:
+					case OK_EXIT:
 						TimeSM = EXIT_CHANGE_TIME;
 						ClearLCD();
 						break;
-					case BUTTON_LEFT:
 					default:
 						break;
 				}
