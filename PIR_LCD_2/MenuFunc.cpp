@@ -47,6 +47,19 @@ void MainScreen()
     {
         while(!EnterSetup)
         {
+            if(Flags.InBand)
+            {
+                if(!Flags.Backlight)
+                {
+                    LCDDisplayOn();
+                    Flags.Backlight = true;
+                }
+                LCDPrintString(TWO,CENTER_ALIGN,"Exit from");
+                LCDPrintString(THREE,CENTER_ALIGN,"band...");
+                delay(DELAY_MESSAGE_MENU);
+                ShowMsg = true;
+                Flags.InBand = false;
+            }
             ButtonPress = CheckButtons();
             switch (ButtonPress)
             {
@@ -105,6 +118,7 @@ void MainScreen()
             Flags.Backlight = false;
         }
         GesLight(OFF);
+        Flags.InBand = true;
     }
 }
 

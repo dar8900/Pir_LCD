@@ -87,7 +87,7 @@ static void InitMemory()
 void setup()
 {
 	Flags.ManualState = false;
-
+    Flags.InBand = false;
 	Serial.begin(9600);
 
 	pinMode(BUTTON_UP, INPUT);
@@ -111,7 +111,7 @@ void setup()
 	ClearLCD();
     OFF(LIGHT_SWITCH);
     Flags.Backlight = true;
-    LCDDisplayOn();    
+    LCDDisplayOn();
 }
 
 void loop()

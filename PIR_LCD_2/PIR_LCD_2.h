@@ -94,6 +94,7 @@ typedef struct
 	bool Backlight;
     bool IsBandSetted;
     bool BandActive;
+    bool InBand;
 	bool ManualState;
 } FLAGS;
 
