@@ -21,6 +21,8 @@
 #define BAND_END_DAY_ADDR                  15
 #define BAND_INVALIDATION_VALUE_ADDR       16
 
+#define RESET_DEFAULT_ADDR                 17
+
 #define FLAG_VALUE_ADDR                    50
 #define NUM_REG_ADDR                       51
 

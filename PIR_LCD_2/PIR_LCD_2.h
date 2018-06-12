@@ -1,4 +1,3 @@
-
 #include <Arduino.h>
 
 #define MAX_LIGHT_DELAY   600 // In secondi
@@ -83,6 +82,6 @@ typedef struct
 	bool ManualState;
 } FLAGS;
 
-
+void ResetWD(void);
 short CheckButtons(void);
 void BlinkLed(short pin);

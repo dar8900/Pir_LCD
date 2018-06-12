@@ -53,6 +53,7 @@ void LcdTimeWrite(int Time2Write)
     delay(1000);
     ClearLCD();
     cnt--;
+	ResetWD();
   }
 
   LCDPrintString(TWO, CENTER_ALIGN, "The light is going");

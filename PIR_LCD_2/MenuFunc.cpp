@@ -1,3 +1,5 @@
+
+
 #include "PIR_LCD_2.h"
 #include "EEPROM_Ard.h"
 
@@ -8,6 +10,8 @@
 
 #define LCD_MANUAL_DELAY_TIMER  3000
 #define INFO_SCROLL_DELAY_TIMER  66
+
+
 
 extern EEPROM_ITEM EepromTab[];
 extern FLAGS  Flags;
@@ -23,6 +27,7 @@ const CREATE_MENU MainSetupItems[] =
   {"Show Info"         , InfoScroll         },
   {"Manual State"	   , ManualState 		},
   {"Change Time Bands" , ChangeTimeBands    },
+  {"Reset Default"     , ResetAll           },
 };
 
 void MainScreen()
@@ -104,6 +109,7 @@ void MainScreen()
             }
             gestionePIR(PirState);
             delay(WHILE_LOOP_DELAY);
+            ResetWD();
         }
         if(EnterSetup)
         {
@@ -121,6 +127,7 @@ void MainScreen()
         }
         GesLight(OFF);
         Flags.InBand = true;
+        ResetWD();
     }
 }
 
@@ -139,6 +146,7 @@ void gestionePIR(short ActivePIR)
             LcdTimeWrite(TimeDelay);
             OFF(LIGHT_SWITCH);
         }
+        ResetWD();
     }
 }
 
@@ -254,6 +262,10 @@ void ManualScreen()
                 WriteMemory(MANUAL_STATE_ADDR, OFF);
             }
         }
+        else
+        {
+            TimerManualExit = 300;
+        }
         TimerDisplayOn--;
         if(TimerDisplayOn == 0 && ButtonPress != EXIT_MANUAL)
         {
@@ -269,6 +281,7 @@ void ManualScreen()
             Flags.Backlight = true;
         }
         delay(10);
+        ResetWD();
     }
     return true;
 }
@@ -323,6 +336,7 @@ void MainSetup()
             default:
                 break;
         }
+        ResetWD();
     }
     if(ExitSetup)
     {
@@ -381,6 +395,7 @@ bool ManualState()
             default:
                 break;
         }
+        ResetWD();
     }
     return true;
 }
@@ -481,6 +496,7 @@ bool ChangeValue()
             break;
 
         }
+        ResetWD();
     }
     OFF(BLUE_LED);
     ClearLCD();
@@ -546,6 +562,7 @@ bool SwichState()
             default:
                 break;
         }
+        ResetWD();
     }
     OFF(BLUE_LED);
     ClearLCD();
@@ -664,6 +681,7 @@ bool InfoScroll()
                 ExitInfo = true;
         }
         delay(WHILE_LOOP_DELAY);
+        ResetWD();
     }
     ClearLCD();
     return true;
@@ -700,7 +718,83 @@ bool ChangeTimeBands()
             Flags.IsBandSetted = false;
             BandSetted = false;
         }
+        ResetWD();
     }
 
     return true;
+}
+
+bool ResetAll()
+{
+
+    bool Reset = false;
+    ClearLCD();
+    LCDPrintString(TWO, CENTER_ALIGN, "Reset to");
+    LCDPrintString(THREE, CENTER_ALIGN, "default values?");
+    Reset = CheckYesNo();
+    if(Reset)
+    {
+        ClearLCD();
+        LCDPrintString(TWO, CENTER_ALIGN, "Reset in progress");
+        LCDPrintString(THREE, CENTER_ALIGN, "wait...");
+        WriteMemory(RESET_DEFAULT_ADDR, RESET);
+        while(1)
+        {}
+    }
+    else
+    {
+        EepromUpdate(RESET_DEFAULT_ADDR, NO_RESET);
+    }
+}
+
+
+bool CheckYesNo()
+{
+	bool Exit = false, Choice = false;
+	String YesNo[] = {"Yes", "No"};
+	short ButtonPress = NOPRESS;
+	ANSWER_TYPE YesNoChoice = NO;
+	while(!Exit)
+	{
+		LCDPrintString(FOUR, CENTER_ALIGN, YesNo[YesNoChoice]);
+		ButtonPress = CheckButtons();
+		switch(ButtonPress)
+		{
+			case UP:
+				BlinkLed(YELLOW_LED);
+				if(YesNoChoice == YES)
+					YesNoChoice = NO;
+				else
+					YesNoChoice = YES;
+				ClearLCDLine(FOUR);
+				break;
+			case DOWN:
+				BlinkLed(YELLOW_LED);
+				if(YesNoChoice == YES)
+					YesNoChoice = NO;
+				else
+					YesNoChoice = YES;
+					ClearLCDLine(FOUR);
+				break;
+			case OK_EXIT:
+				BlinkLed(YELLOW_LED);
+				if(YesNoChoice == YES)
+				{
+					Exit = true;
+					Choice = true;
+				}
+				else
+				{
+					Exit = true;
+					Choice = false;
+				}
+				break;
+			default:
+				break;
+		}
+		ButtonPress = NOPRESS;
+		delay(WHILE_LOOP_DELAY);
+        ResetWD();
+	}
+	return Choice;
 }

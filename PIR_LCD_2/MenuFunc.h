@@ -21,6 +21,18 @@ enum
 	OFF
 };
 
+typedef enum
+{
+	YES = 0,
+	NO
+} ANSWER_TYPE;
+
+enum
+{
+	RESET = 0,
+	NO_RESET
+};
+
 void MainScreen(void);
 void MainSetup(void);
 void gestionePIR(short ActivePIR);
@@ -31,5 +43,7 @@ bool ChangeTimeBands(void);
 bool InfoScroll(void);
 bool SwichState(void);
 bool ChangeValue(void);
+bool ResetAll(void);
+bool CheckYesNo(void);
 
 #endif

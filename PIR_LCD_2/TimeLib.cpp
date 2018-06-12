@@ -35,6 +35,7 @@ void RTCInit()
 		{
 			BlinkLed(YELLOW_LED);
             delay(5);
+            ResetWD();
 		}
 	}
 
@@ -246,6 +247,7 @@ bool ChangeTime()
 				break;
 		}
 		delay(WHILE_LOOP_DELAY);
+        ResetWD();
 	}
 	TimeAdjust(Hour, Minute, Day, Month, Year);
 }

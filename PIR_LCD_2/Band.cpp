@@ -36,6 +36,7 @@ void BandInit()
 	{
 		SetBandInvalid();
 	}
+	ResetWD();
 }
 
 bool CheckBand()
@@ -129,6 +130,7 @@ bool CheckBand()
 			}
 		}
 	}
+	ResetWD();
 	return InBand;
 }
 
@@ -147,7 +149,7 @@ bool IsBandCorrect()
 				{
 					SaveBandValues(BandSaveIdx);
 				}
-				WriteMemory(BAND_INVALIDATION_VALUE_ADDR, VALID);
+				EepromUpdate(BAND_INVALIDATION_VALUE_ADDR, VALID);
 			}
 			else
 			{
@@ -161,7 +163,7 @@ bool IsBandCorrect()
 			{
 				SaveBandValues(BandSaveIdx);
 			}
-			WriteMemory(BAND_INVALIDATION_VALUE_ADDR, VALID);
+			EepromUpdate(BAND_INVALIDATION_VALUE_ADDR, VALID);
 		}
 	}
 	else
@@ -174,7 +176,7 @@ bool IsBandCorrect()
 			{
 				SaveBandValues(BandSaveIdx);
 			}
-			WriteMemory(BAND_INVALIDATION_VALUE_ADDR, VALID);
+			EepromUpdate(BAND_INVALIDATION_VALUE_ADDR, VALID);
 		}
 		else
 		{
@@ -182,6 +184,7 @@ bool IsBandCorrect()
 		}
 
 	}
+	ResetWD();
 	return BandCorrect;
 }
 
@@ -199,7 +202,8 @@ void SetBandInvalid()
 
 	ClearLCD();
 	Flags.IsBandSetted = false;
-	WriteMemory(BAND_INVALIDATION_VALUE_ADDR, INVALID);
+	EepromUpdate(BAND_INVALIDATION_VALUE_ADDR, INVALID);
+	ResetWD();
 }
 
 void SaveBandValues(short WichItem)
@@ -265,7 +269,7 @@ bool SetTimeBand()
 	LCDPrintString(FOUR , CENTER_ALIGN, "per uscire");
 	delay(DELAY_MESSAGE_MENU);
 	ClearLCD();
-
+	ResetWD();
 	while(!ExitSetTimeBand)
 	{
 		TakePresentTime();
@@ -560,6 +564,7 @@ bool SetTimeBand()
 
 		}
 		delay(WHILE_LOOP_DELAY);
+		ResetWD();
 	}
 	return ValidSet;
 }
