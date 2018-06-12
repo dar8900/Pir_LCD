@@ -204,41 +204,43 @@ void SetBandInvalid()
 
 void SaveBandValues(short WichItem)
 {
-	if(WichItem == INIT_HOUR)
+	switch (WichItem)
 	{
-		WriteMemory(BAND_INIT_HOUR_ADDR, Band.InitHour);
-	}
-	else if(WichItem == INIT_MINUTE)
-	{
-		WriteMemory(BAND_INIT_MINUTE_ADDR, Band.InitMinute);
-	}
-	else if(WichItem == END_HOUR)
-	{
-		WriteMemory(BAND_END_HOUR_ADDR, Band.EndHour);
-	}
-    else if(WichItem == END_MINUTE)
-	{
-		WriteMemory(BAND_END_MINUTE_ADDR, Band.EndMinute);
+		case INIT_HOUR:
+			WriteMemory(BAND_INIT_HOUR_ADDR, Band.InitHour);
+			break;
+		case INIT_MINUTE:
+			WriteMemory(BAND_INIT_MINUTE_ADDR, Band.InitMinute);
+			break;
+		case END_HOUR:
+			WriteMemory(BAND_END_HOUR_ADDR, Band.EndHour);
+			break;
+		case END_MINUTE:
+			WriteMemory(BAND_END_MINUTE_ADDR, Band.EndMinute);
+			break;
+		default:
+			break;
 	}
 }
 
 void ReadBandValues(short WichItem)
 {
-	if(WichItem == INIT_HOUR)
+	switch (WichItem)
 	{
-		ReadMemory(BAND_INIT_HOUR_ADDR, 1, &Band.InitHour);
-	}
-	else if(WichItem == INIT_MINUTE)
-	{
-		ReadMemory(BAND_INIT_MINUTE_ADDR, 1, &Band.InitMinute);
-	}
-	else if(WichItem == END_HOUR)
-	{
-		ReadMemory(BAND_END_HOUR_ADDR, 1, &Band.EndHour);
-	}
-    else if(WichItem == END_MINUTE)
-	{
-		ReadMemory(BAND_END_MINUTE_ADDR, 1, &Band.EndMinute);
+		case INIT_HOUR:
+			ReadMemory(BAND_INIT_HOUR_ADDR, 1, &Band.InitHour);
+			break;
+		case INIT_MINUTE:
+			ReadMemory(BAND_INIT_MINUTE_ADDR, 1,&Band.InitMinute);
+			break;
+		case END_HOUR:
+			ReadMemory(BAND_END_HOUR_ADDR, 1, &Band.EndHour);
+			break;
+		case END_MINUTE:
+			ReadMemory(BAND_END_MINUTE_ADDR, 1, &Band.EndMinute);
+			break;
+		default:
+			break;
 	}
 }
 

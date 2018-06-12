@@ -32,13 +32,13 @@ void MainScreen()
     if(Flags.Backlight)
     {
         ClearLCD();
-        LCDPrintString(1,CENTER_ALIGN,"Press on Enter/Ok");
-        LCDPrintString(2,CENTER_ALIGN,"for enter in");
-        LCDPrintString(3,CENTER_ALIGN,"Main Setup");
+        LCDPrintString(TWO,CENTER_ALIGN,"Press on Enter/Ok");
+        LCDPrintString(THREE,CENTER_ALIGN,"for enter in");
+        LCDPrintString(FOUR,CENTER_ALIGN,"Main Setup");
         delay(DELAY_MESSAGE_MENU);
         ClearLCD();
-        LCDPrintString(1,CENTER_ALIGN,"After the display");
-        LCDPrintString(2,CENTER_ALIGN,"is turned off");
+        LCDPrintString(TWO,CENTER_ALIGN,"After the display");
+        LCDPrintString(THREE,CENTER_ALIGN,"is turned off");
         delay(DELAY_MESSAGE_MENU);
         ClearLCD();
         LCDDisplayOff();
@@ -86,13 +86,13 @@ void MainScreen()
                     LCDDisplayOn();
                     Flags.Backlight = true;
                 }
-                LCDPrintString(1,CENTER_ALIGN,"Press on Enter/Ok");
-                LCDPrintString(2,CENTER_ALIGN,"for enter in");
-                LCDPrintString(3,CENTER_ALIGN,"Main Setup");
+                LCDPrintString(TWO,CENTER_ALIGN,"Press on Enter/Ok");
+                LCDPrintString(THREE,CENTER_ALIGN,"for enter in");
+                LCDPrintString(FOUR,CENTER_ALIGN,"Main Setup");
                 delay(DELAY_MESSAGE_MENU);
                 ClearLCD();
-                LCDPrintString(1,CENTER_ALIGN,"After the display");
-                LCDPrintString(2,CENTER_ALIGN,"is turned off");
+                LCDPrintString(TWO,CENTER_ALIGN,"After the display");
+                LCDPrintString(THREE,CENTER_ALIGN,"is turned off");
                 delay(DELAY_MESSAGE_MENU);
                 if(Flags.Backlight)
                 {
@@ -144,7 +144,6 @@ void gestionePIR(short ActivePIR)
 
 void GesLight(short LightState)
 {
-
     if(LightState == ON)
     {
         ON(LIGHT_SWITCH);
@@ -286,23 +285,16 @@ void MainSetup()
     ON(BLUE_LED);
     LCDDisplayOn();
     Flags.Backlight = true;
-
-    // Pulire LCD
     ClearLCD();
     LCDPrintString(ONE,CENTER_ALIGN,"Press Up or Down");
     LCDPrintString(TWO,CENTER_ALIGN,"to scroll the menu");
     LCDPrintString(FOUR,CENTER_ALIGN,"Press Ok to enter");
-
     delay(DELAY_MESSAGE_MENU);
     ClearLCD();
     while(!ExitSetup)
     {
-        ButtonPress = CheckButtons();
-        delay(BUTTON_PRESS_DELAY);
-        // Pulire LCD
-
         LCDPrintString(TWO, CENTER_ALIGN, MainSetupItems[MenuItem].nameMenu);
-
+        ButtonPress = CheckButtons();
         switch(ButtonPress)
         {
             case UP:
@@ -372,6 +364,7 @@ bool ManualState()
                 BlinkLed(YELLOW_LED);
                 ClearLCDLine(THREE);
                 LCDPrintString(THREE, CENTER_ALIGN, "Setted!");
+                delay(DELAY_MESSAGE_MENU);
                 ClearLCD();
                 if(SwitchOnOff == ON)
                 {
@@ -406,9 +399,9 @@ bool ChangeValue()
 
     // Pulire LCD
     ClearLCD();
-    LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-    LCDPrintString(1,CENTER_ALIGN,"to change the value");
-    LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
+    LCDPrintString(ONE,CENTER_ALIGN,"Press Up or Down");
+    LCDPrintString(TWO,CENTER_ALIGN,"to change the value");
+    LCDPrintString(FOUR,CENTER_ALIGN,"Press Ok to exit");
 
     delay(DELAY_MESSAGE_MENU);
     // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di
@@ -417,17 +410,13 @@ bool ChangeValue()
     while(!OkButton)
     {
         ButtonPress = CheckButtons();
-        delay(BUTTON_PRESS_DELAY);
-        // Pulire LCD
-
         if(ChangeDelayAmount <= 60)
         {
-            LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-            LCDPrintString(1,CENTER_ALIGN,"to change the value:");
-            ClearLCDLine(2);
-            LCDPrintValue(2,8, ChangeDelayAmount);
-            LCDPrintString(2,11,"sec");
-            LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
+            LCDPrintString(ONE,CENTER_ALIGN,"Press Up or Down");
+            LCDPrintString(TWO,CENTER_ALIGN,"to change the value:");
+            LCDPrintValue(THREE,8, ChangeDelayAmount);
+            LCDPrintString(THREE,11,"sec");
+            LCDPrintString(FOUR,CENTER_ALIGN,"Press Ok to exit");
         }
         else
         {
@@ -441,16 +430,11 @@ bool ChangeValue()
             {
                 TimeOverSixty = String(Minute) + ":" + String(Second) + "min";
             }
-            LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-            LCDPrintString(1,CENTER_ALIGN,"to change the value:");
-            ClearLCDLine(2);
-            LCDPrintString(2,CENTER_ALIGN, TimeOverSixty);
-            LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
+            LCDPrintString(ONE,CENTER_ALIGN,"Press Up or Down");
+            LCDPrintString(TWO,CENTER_ALIGN,"to change the value:");
+            LCDPrintString(THREE,CENTER_ALIGN, TimeOverSixty);
+            LCDPrintString(FOUR,CENTER_ALIGN,"Press Ok to exit");
         }
-
-        // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di
-        // premere su setup per dare l'ok
-
         switch(ButtonPress)
         {
             case UP:
@@ -464,7 +448,7 @@ bool ChangeValue()
             {
                 ChangeDelayAmount = MIN_LIGHT_DELAY;
             }
-            ClearLCD();
+            ClearLCDLine(THREE);
             break;
             case DOWN:
             BlinkLed(YELLOW_LED); // blink giallo
@@ -473,7 +457,7 @@ bool ChangeValue()
             {
                 ChangeDelayAmount = MAX_LIGHT_DELAY;
             }
-            ClearLCD();
+            ClearLCDLine(THREE);
             break;
             case OK_EXIT:
             BlinkLed(YELLOW_LED); // blink giallo
@@ -481,14 +465,14 @@ bool ChangeValue()
             ClearLCD();
             if(oldDelayAmount != ChangeDelayAmount)
             {
-                LCDPrintString(1,CENTER_ALIGN,"Value Saved!");
+                LCDPrintString(TWO,CENTER_ALIGN,"Value Saved!");
                 WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, ChangeDelayAmount);
                 ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg);
                 ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &ChangeDelayAmount);
             }
             else
             {
-                LCDPrintString(1,CENTER_ALIGN,"Value Unchanged");
+                LCDPrintString(TWO,CENTER_ALIGN,"Value Unchanged");
             }
             OkButton = true;
             delay(DELAY_MESSAGE_MENU);
@@ -500,7 +484,7 @@ bool ChangeValue()
     }
     OFF(BLUE_LED);
     ClearLCD();
-    return OkButton;
+    return true;
 }
 
 
@@ -513,31 +497,22 @@ bool SwichState()
     ReadMemory(EepromTab[EepromItem].eeprom_par_value, EepromTab[EepromItem].eeprom_par_numReg, &EepromTab[EepromItem].eeprom_par_value);
     short OldSwitch = EepromTab[EepromItem].eeprom_par_value;
     short SwitchOnOff = OFF;
-
-    // Pulire LCD
     ClearLCD();
-    LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-    LCDPrintString(1,CENTER_ALIGN,"to change the state");
-    LCDPrintString(2,CENTER_ALIGN,"On or Off");
-    LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
-
+    LCDPrintString(ONE,CENTER_ALIGN,"Press Up or Down");
+    LCDPrintString(TWO,CENTER_ALIGN,"to change the state");
+    LCDPrintString(THREE,CENTER_ALIGN,"On or Off");
+    LCDPrintString(FOUR,CENTER_ALIGN,"Press Ok to exit");
     delay(DELAY_MESSAGE_MENU);
-    // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di
-    // premere su setup per dare l'ok
     ClearLCD();
     while(!OkSwitch)
     {
         ButtonPress = CheckButtons();
         delay(BUTTON_PRESS_DELAY);
-        // Pulire LCD
-        LCDPrintString(0,CENTER_ALIGN,"Press Up or Down");
-        LCDPrintString(1,CENTER_ALIGN,"to change the state");
-        ClearLCDLine(2);
-        LCDPrintString(2, CENTER_ALIGN, OnOff[SwitchOnOff]);
-        LCDPrintString(3,CENTER_ALIGN,"Press Ok to exit");
-        // Scrivere su LCD che cosa si sta aumentando e scrivere nella riga sotto centrale il valore, scriver anche di
-        // premere su setup per dare l'ok
-
+        LCDPrintString(ONE,CENTER_ALIGN,"Press Up or Down");
+        LCDPrintString(TWO,CENTER_ALIGN,"to change the state");
+        ClearLCDLine(THREE);
+        LCDPrintString(THREE, CENTER_ALIGN, OnOff[SwitchOnOff]);
+        LCDPrintString(FOUR,CENTER_ALIGN,"Press Ok to exit");
         switch(ButtonPress)
         {
             case UP:
@@ -558,10 +533,9 @@ bool SwichState()
                 break;
             case OK_EXIT:
                 BlinkLed(YELLOW_LED); // blink giallo
-                // Scrivere su LCD "Valori salvati"
                 ClearLCD();
-                LCDPrintString(1, CENTER_ALIGN, "The state is");
-                LCDPrintString(2, CENTER_ALIGN, OnOff[SwitchOnOff]);
+                LCDPrintString(TWO, CENTER_ALIGN, "The state is");
+                LCDPrintString(THREE, CENTER_ALIGN, OnOff[SwitchOnOff]);
                 if(SwitchOnOff != OldSwitch)
                 {
                     WriteMemory(EepromTab[EepromItem].eeprom_par_addr, SwitchOnOff);
@@ -592,6 +566,11 @@ bool InfoScroll()
     ON(BLUE_LED);
     // Pulire LCD
     ClearLCD();
+    LCDPrintString(ONE, CENTER_ALIGN, "General Info");
+    LCDPrintString(TWO, CENTER_ALIGN, "Press Ok/Exit");
+    LCDPrintString(THREE, CENTER_ALIGN, "to exit");
+    delay(DELAY_MESSAGE_MENU);
+    ClearLCD();
     while(!ExitInfo)
     {
         switch(Page)
@@ -606,7 +585,6 @@ bool InfoScroll()
                     tmpEepromValue = String(EepromTab[Page].eeprom_par_value);
                     tmpEepromValue = String(tmpEepromValue + "sec");
                     LCDPrintString(THREE, CENTER_ALIGN, tmpEepromValue);
-
                 }
                 else
                 {
@@ -642,10 +620,10 @@ bool InfoScroll()
                 }
                 break;
             case TIME_BANDS:
+                LCDPrintString(ONE, CENTER_ALIGN, "The band is:");
                 if(Flags.IsBandSetted)
                 {
-                    LCDPrintString(TWO, CENTER_ALIGN, "Setted");
-                    LCDPrintString(THREE, CENTER_ALIGN, "The band is:");
+                    LCDPrintString(TWO, CENTER_ALIGN, "setted");
                     BandTime1 = String(Band.InitHour) + ":";
                     BandTime2 = String(Band.EndHour) + ":";
                     if(Band.InitMinute < 10)
@@ -658,11 +636,11 @@ bool InfoScroll()
                         BandTime2 += String(Band.EndMinute);
 
                     BandTime1 = BandTime1 + "  " + BandTime2;
-                    LCDPrintString(FOUR, CENTER_ALIGN, BandTime1);
+                    LCDPrintString(THREE, CENTER_ALIGN, BandTime1);
                 }
                 else
                 {
-                    LCDPrintString(TWO, CENTER_ALIGN, "Not setted");
+                    LCDPrintString(TWO, CENTER_ALIGN, "not setted");
                 }
                 TimerScrollInfo--;
                 if(TimerScrollInfo == 0)
@@ -715,8 +693,8 @@ bool ChangeTimeBands()
         {
             ClearLCD();
             LCDPrintString(ONE, CENTER_ALIGN, "Error!");
-            LCDPrintString(ONE, CENTER_ALIGN, "Repeat the");
-            LCDPrintString(ONE, CENTER_ALIGN, "procedure");
+            LCDPrintString(TWO, CENTER_ALIGN, "Repeat the");
+            LCDPrintString(THREE, CENTER_ALIGN, "procedure");
             delay(DELAY_MESSAGE_MENU);
             ClearLCD();
             Flags.IsBandSetted = false;

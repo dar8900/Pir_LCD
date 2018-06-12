@@ -28,13 +28,24 @@ short CheckButtons()
     buttonDown = READ(BUTTON_DOWN);
     OkButton = READ(BUTTON_SETUP);
 	if(buttonUp == HIGH)
+    {
 		ButtonPress = UP;
+        delay(50);
+    }
 	if(buttonDown == HIGH)
+    {
 		ButtonPress = DOWN;
+        delay(50);
+    }
 	if(OkButton == HIGH)
+    {
 		ButtonPress = OK_EXIT;
+        delay(50);
+    }
     if(buttonDown == HIGH && OkButton == HIGH)
+    {
         ButtonPress = EXIT_MANUAL;
+    }
 	return ButtonPress;
 }
 
@@ -56,8 +67,8 @@ static void InitMemory()
 	{
 	  WriteMemory(FIRST_START_CHECK_ADDR, 1);
 	  FirstStartCheck = 1;
-	  LCDPrintString(0,CENTER_ALIGN, "Default values");
-	  LCDPrintString(1, CENTER_ALIGN, "restored");
+	  LCDPrintString(ONE,CENTER_ALIGN, "Default values");
+	  LCDPrintString(TWO, CENTER_ALIGN, "restored");
 	  delay(2000);
 	}
 	else

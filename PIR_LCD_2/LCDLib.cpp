@@ -55,8 +55,8 @@ void LcdTimeWrite(int Time2Write)
     cnt--;
   }
 
-  LCDPrintString(1, CENTER_ALIGN, "The light is going");
-  LCDPrintString(2, CENTER_ALIGN, "to turn off");
+  LCDPrintString(TWO, CENTER_ALIGN, "The light is going");
+  LCDPrintString(THREE, CENTER_ALIGN, "to turn off");
   delay(1000);
   ClearLCD();
 }
