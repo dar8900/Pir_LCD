@@ -36,7 +36,7 @@ void BandInit()
 	{
 		SetBandInvalid();
 	}
-	ResetWD();
+	//ResetWD();
 }
 
 bool CheckBand()
@@ -130,7 +130,7 @@ bool CheckBand()
 			}
 		}
 	}
-	ResetWD();
+	//ResetWD();
 	return InBand;
 }
 
@@ -184,7 +184,7 @@ bool IsBandCorrect()
 		}
 
 	}
-	ResetWD();
+	//ResetWD();
 	return BandCorrect;
 }
 
@@ -203,7 +203,7 @@ void SetBandInvalid()
 	ClearLCD();
 	Flags.IsBandSetted = false;
 	EepromUpdate(BAND_INVALIDATION_VALUE_ADDR, INVALID);
-	ResetWD();
+	//ResetWD();
 }
 
 void SaveBandValues(short WichItem)
@@ -269,7 +269,7 @@ bool SetTimeBand()
 	LCDPrintString(FOUR , CENTER_ALIGN, "per uscire");
 	delay(DELAY_MESSAGE_MENU);
 	ClearLCD();
-	ResetWD();
+	//ResetWD();
 	while(!ExitSetTimeBand)
 	{
 		TakePresentTime();
@@ -564,7 +564,7 @@ bool SetTimeBand()
 
 		}
 		delay(WHILE_LOOP_DELAY);
-		ResetWD();
+		//ResetWD();
 	}
 	return ValidSet;
 }

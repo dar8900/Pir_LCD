@@ -109,7 +109,7 @@ void MainScreen()
             }
             gestionePIR(PirState);
             delay(WHILE_LOOP_DELAY);
-            ResetWD();
+            //ResetWD();
         }
         if(EnterSetup)
         {
@@ -127,7 +127,7 @@ void MainScreen()
         }
         GesLight(OFF);
         Flags.InBand = true;
-        ResetWD();
+        //ResetWD();
     }
 }
 
@@ -146,7 +146,7 @@ void gestionePIR(short ActivePIR)
             LcdTimeWrite(TimeDelay);
             OFF(LIGHT_SWITCH);
         }
-        ResetWD();
+        //ResetWD();
     }
 }
 
@@ -281,7 +281,7 @@ void ManualScreen()
             Flags.Backlight = true;
         }
         delay(10);
-        ResetWD();
+        //ResetWD();
     }
     return true;
 }
@@ -336,7 +336,7 @@ void MainSetup()
             default:
                 break;
         }
-        ResetWD();
+        //ResetWD();
     }
     if(ExitSetup)
     {
@@ -395,7 +395,7 @@ bool ManualState()
             default:
                 break;
         }
-        ResetWD();
+        //ResetWD();
     }
     return true;
 }
@@ -496,7 +496,7 @@ bool ChangeValue()
             break;
 
         }
-        ResetWD();
+        //ResetWD();
     }
     OFF(BLUE_LED);
     ClearLCD();
@@ -562,7 +562,7 @@ bool SwichState()
             default:
                 break;
         }
-        ResetWD();
+        //ResetWD();
     }
     OFF(BLUE_LED);
     ClearLCD();
@@ -681,7 +681,7 @@ bool InfoScroll()
                 ExitInfo = true;
         }
         delay(WHILE_LOOP_DELAY);
-        ResetWD();
+        //ResetWD();
     }
     ClearLCD();
     return true;
@@ -718,7 +718,7 @@ bool ChangeTimeBands()
             Flags.IsBandSetted = false;
             BandSetted = false;
         }
-        ResetWD();
+        //ResetWD();
     }
 
     return true;
@@ -738,8 +738,11 @@ bool ResetAll()
         LCDPrintString(TWO, CENTER_ALIGN, "Reset in progress");
         LCDPrintString(THREE, CENTER_ALIGN, "wait...");
         WriteMemory(RESET_DEFAULT_ADDR, RESET);
+        EnableWD(WDTO_2S);
         while(1)
-        {}
+        {
+            delay(10);
+        }
     }
     else
     {
@@ -794,7 +797,7 @@ bool CheckYesNo()
 		}
 		ButtonPress = NOPRESS;
 		delay(WHILE_LOOP_DELAY);
-        ResetWD();
+        //ResetWD();
 	}
 	return Choice;
 }

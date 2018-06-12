@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <avr/wdt.h>
 
 #define MAX_LIGHT_DELAY   600 // In secondi
 #define MIN_LIGHT_DELAY    20 // In secondi
@@ -40,15 +41,6 @@ typedef enum
 }EEPROM_ITEM_ENUM;
 
 
-// typedef struct
-// {
-// 	short hour;
-// 	short minute;
-// 	short day;
-// 	short month;
-// 	short year;
-// } TIME_DATE_FORMAT;
-
 enum
 {
 					// PIN
@@ -83,5 +75,6 @@ typedef struct
 } FLAGS;
 
 void ResetWD(void);
+void EnableWD(short Delay);
 short CheckButtons(void);
 void BlinkLed(short pin);

@@ -1,5 +1,4 @@
 #include <Wire.h>  // Libreria di sistema - E' richiesta da I2CIO.cpp
-#include <avr/wdt.h>
 
 #include "PIR_LCD_2.h"
 #include "EEPROM_Ard.h"
@@ -22,6 +21,22 @@ EEPROM_ITEM EepromTab[] =
 void ResetWD()
 {
     wdt_reset();
+}
+
+// #define 	WDTO_15MS
+// #define 	WDTO_30MS
+// #define 	WDTO_60MS
+// #define 	WDTO_120MS
+// #define 	WDTO_250MS
+// #define 	WDTO_500MS
+// #define 	WDTO_1S
+// #define 	WDTO_2S
+// #define 	WDTO_4S
+// #define 	WDTO_8S
+
+void EnableWD(short Delay)
+{
+    wdt_enable(Delay);
 }
 
 short CheckButtons()
@@ -132,8 +147,8 @@ void setup()
     OFF(LIGHT_SWITCH);
     Flags.Backlight = true;
     LCDDisplayOn();
-    wdt_enable(WDTO_4S);
-    ResetWD();
+    //wdt_enable(WDTO_4S);
+    //ResetWD();
 }
 
 void loop()
