@@ -18,6 +18,8 @@ EEPROM_ITEM EepromTab[] =
   {OFF				      	,  MANUAL_STATE_ADDR      , 1,  "Manual state"  },
 };
 
+
+
 void ResetWD()
 {
     wdt_reset();
@@ -117,7 +119,44 @@ static void InitMemory()
 	return;
 }
 
-
+void LedCtrl(LED_POSITION Position)
+{
+    switch(Position)
+    {
+        case MENU_POS:
+            ON(BLUE_LED);
+            OFF(RED_LED);
+            OFF(GREEN_LED);
+            break;
+        case PIR_INACTIVE_POS:
+            OFF(BLUE_LED);
+            ON(RED_LED);
+            OFF(GREEN_LED);
+            break;
+        case PIR_ACTIVE_POS:
+            OFF(BLUE_LED);
+            OFF(RED_LED);
+            ON(GREEN_LED);
+            break;
+        case MANUAL_POS:
+            ON(BLUE_LED);
+            OFF(RED_LED);
+            ON(GREEN_LED);
+            break;
+        case MESSAGE_POS:
+            ON(BLUE_LED);
+            ON(RED_LED);
+            OFF(GREEN_LED);
+            break;
+        case NO_LED:
+            OFF(BLUE_LED);
+            OFF(RED_LED);
+            OFF(GREEN_LED);
+            break;
+        default:
+            break;
+    }
+}
 
 void setup()
 {

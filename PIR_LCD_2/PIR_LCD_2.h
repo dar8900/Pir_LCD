@@ -16,6 +16,9 @@
 
 #define RTC_INSERTED
 
+#define VERSION_NUMBER  "1.2"
+#define VERSION_DATA  "2/7/18"
+
 typedef struct
 {
   String nameMenu;
@@ -74,7 +77,19 @@ typedef struct
 	bool ManualState;
 } FLAGS;
 
+typedef enum
+{
+      MENU_POS = 0,
+      PIR_INACTIVE_POS,
+      PIR_ACTIVE_POS,
+      MANUAL_POS,
+      MESSAGE_POS,
+      NO_LED
+}LED_POSITION;
+
+
 void ResetWD(void);
 void EnableWD(short Delay);
 short CheckButtons(void);
 void BlinkLed(short pin);
+void LedCtrl(LED_POSITION Position);

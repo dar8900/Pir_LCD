@@ -9,7 +9,7 @@
 #include "Band.h"
 
 #define LCD_MANUAL_DELAY_TIMER  3000
-#define INFO_SCROLL_DELAY_TIMER  66
+#define INFO_SCROLL_DELAY_TIMER  40
 
 
 
@@ -34,6 +34,7 @@ void MainScreen()
 {
     short ButtonPress = NOPRESS, PirState = EepromTab[PIR_STATE].eeprom_par_value;
     bool ShowMsg = false, EnterSetup = false;
+    LedCtrl(NO_LED);
     if(Flags.Backlight)
     {
         ClearLCD();
@@ -91,6 +92,7 @@ void MainScreen()
                     LCDDisplayOn();
                     Flags.Backlight = true;
                 }
+                LedCtrl(MESSAGE_POS);
                 LCDPrintString(TWO,CENTER_ALIGN,"Press on Enter/Ok");
                 LCDPrintString(THREE,CENTER_ALIGN,"for enter in");
                 LCDPrintString(FOUR,CENTER_ALIGN,"Main Setup");
@@ -106,8 +108,12 @@ void MainScreen()
                 }
                 ClearLCD();
                 ShowMsg = false;
+                LedCtrl(NO_LED);
             }
-            gestionePIR(PirState);
+            if(!EnterSetup)
+            {
+                gestionePIR(PirState);
+            }
             delay(WHILE_LOOP_DELAY);
             //ResetWD();
         }
@@ -136,6 +142,7 @@ void gestionePIR(short ActivePIR)
     short StatePir = LOW, TimeDelay = 0, numReg = 0;
     if(ActivePIR == ON)
     {
+        LedCtrl(PIR_ACTIVE_POS);
         StatePir = READ(PIR_INPUT);
         if(StatePir == HIGH)
         {
@@ -146,6 +153,7 @@ void gestionePIR(short ActivePIR)
             LcdTimeWrite(TimeDelay);
             OFF(LIGHT_SWITCH);
         }
+        LedCtrl(NO_LED);
         //ResetWD();
     }
 }
@@ -172,6 +180,7 @@ void ManualScreen()
     ClearLCD();
     LCDDisplayOn();
     Flags.Backlight = true;
+    LedCtrl(MANUAL_POS);
     LCDPrintString(ONE, CENTER_ALIGN, "Manual State");
     LCDPrintString(TWO, CENTER_ALIGN, "The light is:");
     LCDPrintString(FOUR, CENTER_ALIGN, "Press Ok to confirm");
@@ -193,14 +202,15 @@ void ManualScreen()
                 if(TimerDisplayOn == 0)
                 {
                     TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
-                    break;
                 }
                 else
+                {
                     TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
-                if(LightState == OFF)
-                    LightState = ON;
-                else
-                    LightState = OFF;
+                    if(LightState == OFF)
+                        LightState = ON;
+                    else
+                        LightState = OFF;
+                }
                 ClearLCDLine(THREE);
                 break;
             case DOWN:
@@ -208,14 +218,15 @@ void ManualScreen()
                 if(TimerDisplayOn == 0)
                 {
                     TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
-                    break;
                 }
                 else
+                {
                     TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
-                if(LightState == OFF)
-                    LightState = ON;
-                else
-                    LightState = OFF;
+                    if(LightState == OFF)
+                        LightState = ON;
+                    else
+                        LightState = OFF;
+                }
                 ClearLCDLine(THREE);
                 break;
             case OK_EXIT:
@@ -223,22 +234,23 @@ void ManualScreen()
                 if(TimerDisplayOn == 0)
                 {
                     TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
-                    break;
                 }
                 else
-                    TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
-                ReadMemory(LIGHT_STATE_ADDR, 1, &OldLightState);
-                if(LightState != OldLightState)
-                    GesLight(LightState);
-                else
                 {
-                    ClearLCD();
-                    LCDPrintString(ONE, CENTER_ALIGN, "The light is");
-                    LCDPrintString(TWO, CENTER_ALIGN, "already");
-                    LCDPrintString(THREE, CENTER_ALIGN, OnOff[LightState]);
-                    delay(DELAY_MESSAGE_MENU);
-                    ClearLCD();
-                    OldValues = true;
+                    TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
+                    ReadMemory(LIGHT_STATE_ADDR, 1, &OldLightState);
+                    if(LightState != OldLightState)
+                        GesLight(LightState);
+                    else
+                    {
+                        ClearLCD();
+                        LCDPrintString(ONE, CENTER_ALIGN, "The light is");
+                        LCDPrintString(TWO, CENTER_ALIGN, "already");
+                        LCDPrintString(THREE, CENTER_ALIGN, OnOff[LightState]);
+                        delay(DELAY_MESSAGE_MENU);
+                        ClearLCD();
+                        OldValues = true;
+                    }
                 }
                 break;
         }
@@ -283,6 +295,7 @@ void ManualScreen()
         delay(10);
         //ResetWD();
     }
+    LedCtrl(NO_LED);
     return true;
 }
 
@@ -292,10 +305,7 @@ void MainSetup()
     bool ExitSetup = false;
     short MenuItem = LIGHT_DELAY;
     short ButtonPress;
-
-    OFF(RED_LED);
-    OFF(GREEN_LED);
-    ON(BLUE_LED);
+    LedCtrl(MENU_POS);
     LCDDisplayOn();
     Flags.Backlight = true;
     ClearLCD();
@@ -342,7 +352,7 @@ void MainSetup()
     {
         MainSetupItems[MenuItem].MenuFunc();
     }
-    OFF(BLUE_LED);
+    LedCtrl(NO_LED);
 }
 
 bool ManualState()
@@ -351,51 +361,28 @@ bool ManualState()
     bool ExitSetManual = false;
     ClearLCD();
     LCDPrintString(ONE, CENTER_ALIGN, "Set the");
-    LCDPrintString(TWO, CENTER_ALIGN, "manual state:");
-    while(!ExitSetManual)
+    LCDPrintString(TWO, CENTER_ALIGN, "manual state?");
+    if(CheckYesNo())
     {
-        LCDPrintString(THREE, CENTER_ALIGN, OnOff[SwitchOnOff]);
-        ButtonPress = CheckButtons();
-        switch(ButtonPress)
-        {
-            case UP:
-                BlinkLed(YELLOW_LED);
-                if(SwitchOnOff == OFF)
-                    SwitchOnOff = ON;
-                else
-                    SwitchOnOff = OFF;
-                ClearLCDLine(THREE);
-                break;
-            case DOWN:
-                BlinkLed(YELLOW_LED);
-                if(SwitchOnOff == OFF)
-                    SwitchOnOff = ON;
-                else
-                    SwitchOnOff = OFF;
-                ClearLCDLine(THREE);
-                break;
-            case OK_EXIT:
-                BlinkLed(YELLOW_LED);
-                ClearLCDLine(THREE);
-                LCDPrintString(THREE, CENTER_ALIGN, "Setted!");
-                delay(DELAY_MESSAGE_MENU);
-                ClearLCD();
-                if(SwitchOnOff == ON)
-                {
-                    Flags.ManualState = true;
-                    WriteMemory(MANUAL_STATE_ADDR, ON);
-                }
-                else
-                {
-                    Flags.ManualState = false;
-                    WriteMemory(MANUAL_STATE_ADDR, OFF);
-                }
-                ExitSetManual = true;
-                break;
-            default:
-                break;
-        }
-        //ResetWD();
+        LedCtrl(MESSAGE_POS);
+        ClearLCD();
+        LCDPrintString(THREE, CENTER_ALIGN, "Setted!");
+        delay(DELAY_MESSAGE_MENU);
+        ClearLCD();
+        Flags.ManualState = true;
+        EepromUpdate(MANUAL_STATE_ADDR, ON);
+        LedCtrl(MENU_POS);
+    }
+    else
+    {
+        LedCtrl(MESSAGE_POS);
+        ClearLCD();
+        LCDPrintString(THREE, CENTER_ALIGN, "Not setted");
+        delay(DELAY_MESSAGE_MENU);
+        ClearLCD();
+        Flags.ManualState = false;
+        EepromUpdate(MANUAL_STATE_ADDR, OFF);
+        LedCtrl(MENU_POS);
     }
     return true;
 }
@@ -453,31 +440,32 @@ bool ChangeValue()
         switch(ButtonPress)
         {
             case UP:
-            BlinkLed(YELLOW_LED); // blink giallo
-            if(ChangeDelayAmount == 0)
-            {
-                ChangeDelayAmount == MIN_LIGHT_DELAY;
-            }
-            ChangeDelayAmount++;
-            if(ChangeDelayAmount > MAX_LIGHT_DELAY) // Raggiunti i secondi massimi per il delay nella gestione pir
-            {
-                ChangeDelayAmount = MIN_LIGHT_DELAY;
-            }
-            ClearLCDLine(THREE);
-            break;
+                BlinkLed(YELLOW_LED); // blink giallo
+                if(ChangeDelayAmount == 0)
+                {
+                    ChangeDelayAmount == MIN_LIGHT_DELAY;
+                }
+                ChangeDelayAmount++;
+                if(ChangeDelayAmount > MAX_LIGHT_DELAY) // Raggiunti i secondi massimi per il delay nella gestione pir
+                {
+                    ChangeDelayAmount = MIN_LIGHT_DELAY;
+                }
+                ClearLCDLine(THREE);
+                break;
             case DOWN:
             BlinkLed(YELLOW_LED); // blink giallo
-            ChangeDelayAmount--;
-            if(ChangeDelayAmount < MIN_LIGHT_DELAY) // Raggiunti i secondi minimi per il delay nella gestione pir
-            {
-                ChangeDelayAmount = MAX_LIGHT_DELAY;
-            }
-            ClearLCDLine(THREE);
+                ChangeDelayAmount--;
+                if(ChangeDelayAmount < MIN_LIGHT_DELAY) // Raggiunti i secondi minimi per il delay nella gestione pir
+                {
+                    ChangeDelayAmount = MAX_LIGHT_DELAY;
+                }
+                ClearLCDLine(THREE);
             break;
             case OK_EXIT:
             BlinkLed(YELLOW_LED); // blink giallo
             // Scrivere su LCD "Valori salvati"
             ClearLCD();
+            LedCtrl(MESSAGE_POS);
             if(oldDelayAmount != ChangeDelayAmount)
             {
                 LCDPrintString(TWO,CENTER_ALIGN,"Value Saved!");
@@ -491,6 +479,7 @@ bool ChangeValue()
             }
             OkButton = true;
             delay(DELAY_MESSAGE_MENU);
+            LedCtrl(MENU_POS);
             break;
             default:
             break;
@@ -498,7 +487,6 @@ bool ChangeValue()
         }
         //ResetWD();
     }
-    OFF(BLUE_LED);
     ClearLCD();
     return true;
 }
@@ -550,6 +538,7 @@ bool SwichState()
             case OK_EXIT:
                 BlinkLed(YELLOW_LED); // blink giallo
                 ClearLCD();
+                LedCtrl(MESSAGE_POS);
                 LCDPrintString(TWO, CENTER_ALIGN, "The state is");
                 LCDPrintString(THREE, CENTER_ALIGN, OnOff[SwitchOnOff]);
                 if(SwitchOnOff != OldSwitch)
@@ -558,13 +547,13 @@ bool SwichState()
                 }
                 OkSwitch = true;
                 delay(DELAY_MESSAGE_MENU);
+                LedCtrl(MENU_POS);
                 break;
             default:
                 break;
         }
         //ResetWD();
     }
-    OFF(BLUE_LED);
     ClearLCD();
     return OkSwitch;
 
@@ -574,13 +563,12 @@ bool InfoScroll()
 {
     short TimerScrollInfo = INFO_SCROLL_DELAY_TIMER, ButtonPress = NOPRESS;
     bool ExitInfo = false;
-    MENU_ITEM Page = LIGHT_DELAY;
+    short Page = LIGHT_DELAY_INFO;
     short numReg;
     String tmpEepromValue;
     short Minute = 0, Second = 0;
     String TimeStr, DateStr;
     String BandTime1, BandTime2;
-    ON(BLUE_LED);
     // Pulire LCD
     ClearLCD();
     LCDPrintString(ONE, CENTER_ALIGN, "General Info");
@@ -588,11 +576,12 @@ bool InfoScroll()
     LCDPrintString(THREE, CENTER_ALIGN, "to exit");
     delay(DELAY_MESSAGE_MENU);
     ClearLCD();
+    LedCtrl(MESSAGE_POS);
     while(!ExitInfo)
     {
         switch(Page)
         {
-            case LIGHT_DELAY:
+            case LIGHT_DELAY_INFO:
                 LCDPrintString(ONE, CENTER_ALIGN, "The delay for");
                 LCDPrintString(TWO, CENTER_ALIGN, "the light is:");
                 ReadMemory(NUM_REG_ADDR, 1, &numReg);
@@ -615,28 +604,14 @@ bool InfoScroll()
                     tmpEepromValue = String(Minute) + ":" + String(Second) + "min";
                     LCDPrintString(THREE, CENTER_ALIGN, tmpEepromValue);
                 }
-                TimerScrollInfo--;
-                if(TimerScrollInfo == 0)
-                {
-                    TimerScrollInfo = INFO_SCROLL_DELAY_TIMER;
-                    Page = PIR_STATE_MENU;
-                    ClearLCD();
-                }
                 break;
-            case PIR_STATE_MENU:
+            case PIR_STATE_MENU_INFO:
                 LCDPrintString(ONE, CENTER_ALIGN, "The state of");
                 LCDPrintString(TWO, CENTER_ALIGN, "the PIR is:");
                 ReadMemory(EepromTab[PIR_STATE].eeprom_par_value, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
                 LCDPrintString(THREE, CENTER_ALIGN, OnOff[EepromTab[PIR_STATE].eeprom_par_value]);
-                TimerScrollInfo--;
-                if(TimerScrollInfo == 0)
-                {
-                    TimerScrollInfo = INFO_SCROLL_DELAY_TIMER;
-                    Page = TIME_BANDS;
-                    ClearLCD();
-                }
                 break;
-            case TIME_BANDS:
+            case TIME_BANDS_INFO:
                 LCDPrintString(ONE, CENTER_ALIGN, "The band is:");
                 if(Flags.IsBandSetted)
                 {
@@ -659,13 +634,12 @@ bool InfoScroll()
                 {
                     LCDPrintString(TWO, CENTER_ALIGN, "not setted");
                 }
-                TimerScrollInfo--;
-                if(TimerScrollInfo == 0)
-                {
-                    TimerScrollInfo = INFO_SCROLL_DELAY_TIMER;
-                    Page = LIGHT_DELAY;
-                    ClearLCD();
-                }
+                break;
+            case VERSION_DATA_INFO:
+                LCDPrintString(ONE, CENTER_ALIGN, "Version Number:");
+                LCDPrintString(TWO, CENTER_ALIGN, VERSION_NUMBER);
+                LCDPrintString(THREE, CENTER_ALIGN, "Release Date:");
+                LCDPrintString(TWO, CENTER_ALIGN, VERSION_DATA);
                 break;
             default:
                 break;
@@ -680,9 +654,19 @@ bool InfoScroll()
             case OK_EXIT:
                 ExitInfo = true;
         }
+        TimerScrollInfo--;
+        if(TimerScrollInfo == 0)
+        {
+            TimerScrollInfo = INFO_SCROLL_DELAY_TIMER;
+            Page++;
+            if(Page > MAX_INFO_ITEMS - 1)
+                Page = LIGHT_DELAY_INFO;
+            ClearLCD();
+        }
         delay(WHILE_LOOP_DELAY);
         //ResetWD();
     }
+    LedCtrl(MENU_POS);
     ClearLCD();
     return true;
 }
@@ -709,6 +693,7 @@ bool ChangeTimeBands()
         }
         else
         {
+            LedCtrl(MESSAGE_POS);
             ClearLCD();
             LCDPrintString(ONE, CENTER_ALIGN, "Error!");
             LCDPrintString(TWO, CENTER_ALIGN, "Repeat the");
@@ -717,6 +702,7 @@ bool ChangeTimeBands()
             ClearLCD();
             Flags.IsBandSetted = false;
             BandSetted = false;
+            LedCtrl(MENU_POS);
         }
         //ResetWD();
     }
