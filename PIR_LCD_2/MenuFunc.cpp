@@ -8,7 +8,7 @@
 #include "TimeLib.h"
 #include "Band.h"
 
-#define LCD_MANUAL_DELAY_TIMER  3000
+#define LCD_MANUAL_DELAY_TIMER  300
 #define INFO_SCROLL_DELAY_TIMER  40
 
 
@@ -26,7 +26,9 @@ const CREATE_MENU MainSetupItems[] =
   {"Change PIR state"  , SwichState 		},
   {"Show Info"         , InfoScroll         },
   {"Manual State"	   , ManualState 		},
+  {"Show Time"   	   , ShowMenuTime 		},
   {"Change Time Bands" , ChangeTimeBands    },
+  {"Change Date/Time"  , ChangeTime		    },
   {"Reset Default"     , ResetAll           },
 };
 
@@ -150,8 +152,11 @@ void gestionePIR(short ActivePIR)
             ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &EepromTab[DELAY_AMOUNT].eeprom_par_value);
             TimeDelay = EepromTab[DELAY_AMOUNT].eeprom_par_value;
             ON(LIGHT_SWITCH);
+			if(!Flags.Backlight)
+				LCDDisplayOn();
             LcdTimeWrite(TimeDelay);
             OFF(LIGHT_SWITCH);
+			LCDDisplayOff();
         }
         LedCtrl(NO_LED);
         //ResetWD();
@@ -174,7 +179,8 @@ void GesLight(short LightState)
 
 void ManualScreen()
 {
-    short ButtonPress = NOPRESS, LightState = OFF, OldLightState = 0, TimerManualExit = 300, TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
+    short ButtonPress = NOPRESS, LightState = OFF, OldLightState = OFF;
+	int TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
     bool ExitManualState = false, OldValues = false;;
     ReadMemory(LIGHT_STATE_ADDR, 1, &OldLightState);
     ClearLCD();
@@ -238,9 +244,17 @@ void ManualScreen()
                 else
                 {
                     TimerDisplayOn = LCD_MANUAL_DELAY_TIMER;
-                    ReadMemory(LIGHT_STATE_ADDR, 1, &OldLightState);
                     if(LightState != OldLightState)
+					{
+						ClearLCD();
                         GesLight(LightState);
+						EepromUpdate(LIGHT_STATE_ADDR, LightState);
+						OldLightState = LightState;
+						LCDPrintString(TWO, CENTER_ALIGN, "The light is");
+						LCDPrintString(THREE, CENTER_ALIGN, OnOff[LightState]);
+						delay(DELAY_MESSAGE_MENU);
+						ClearLCD();
+					}
                     else
                     {
                         ClearLCD();
@@ -261,25 +275,18 @@ void ManualScreen()
                 LCDDisplayOn();
                 Flags.Backlight = true;
             }
-            TimerManualExit--;
-            if(TimerManualExit == 0)
-            {
-                ClearLCD();
-                LCDPrintString(TWO, CENTER_ALIGN, "Exit from");
-                LCDPrintString(THREE, CENTER_ALIGN, "manual state");
-                delay(DELAY_MESSAGE_MENU);
-                ClearLCD();
-                Flags.ManualState = false;
-                ExitManualState = true;
-                WriteMemory(MANUAL_STATE_ADDR, OFF);
-            }
+			ClearLCD();
+			LCDPrintString(TWO, CENTER_ALIGN, "Exit from");
+			LCDPrintString(THREE, CENTER_ALIGN, "manual state");
+			delay(DELAY_MESSAGE_MENU);
+			ClearLCD();
+			Flags.ManualState = false;
+			ExitManualState = true;
+			WriteMemory(MANUAL_STATE_ADDR, OFF);
         }
-        else
-        {
-            TimerManualExit = 300;
-        }
-        TimerDisplayOn--;
-        if(TimerDisplayOn == 0 && ButtonPress != EXIT_MANUAL)
+		if(TimerDisplayOn > 0)
+			TimerDisplayOn--;
+        if(TimerDisplayOn == 0)
         {
             if(Flags.Backlight)
             {
@@ -498,8 +505,9 @@ bool SwichState()
     short EepromItem;
     bool OkSwitch = false;
     EepromItem = PIR_STATE;
-    ReadMemory(EepromTab[EepromItem].eeprom_par_value, EepromTab[EepromItem].eeprom_par_numReg, &EepromTab[EepromItem].eeprom_par_value);
-    short OldSwitch = EepromTab[EepromItem].eeprom_par_value;
+	short PirState;
+    ReadMemory(EepromTab[EepromItem].eeprom_par_value, 1, &PirState);
+    short OldSwitch = PirState;
     short SwitchOnOff = OFF;
     ClearLCD();
     LCDPrintString(ONE,CENTER_ALIGN,"Press Up or Down");
@@ -543,7 +551,9 @@ bool SwichState()
                 LCDPrintString(THREE, CENTER_ALIGN, OnOff[SwitchOnOff]);
                 if(SwitchOnOff != OldSwitch)
                 {
-                    WriteMemory(EepromTab[EepromItem].eeprom_par_addr, SwitchOnOff);
+                    EepromUpdate(EepromTab[EepromItem].eeprom_par_addr, SwitchOnOff);
+					for(int i = 0; i < 5; i++)
+						BlinkLed(YELLOW_LED);
                 }
                 OkSwitch = true;
                 delay(DELAY_MESSAGE_MENU);
@@ -565,10 +575,13 @@ bool InfoScroll()
     bool ExitInfo = false;
     short Page = LIGHT_DELAY_INFO;
     short numReg;
+	short StatePir;
     String tmpEepromValue;
     short Minute = 0, Second = 0;
     String TimeStr, DateStr;
     String BandTime1, BandTime2;
+	String ONOFFStr[] = {"ON", "OFF"};
+	ReadMemory(SWITCH_PIR_ADDR, 1, &StatePir);
     // Pulire LCD
     ClearLCD();
     LCDPrintString(ONE, CENTER_ALIGN, "General Info");
@@ -577,6 +590,7 @@ bool InfoScroll()
     delay(DELAY_MESSAGE_MENU);
     ClearLCD();
     LedCtrl(MESSAGE_POS);
+    ReadMemory(EepromTab[PIR_STATE].eeprom_par_value, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
     while(!ExitInfo)
     {
         switch(Page)
@@ -608,8 +622,7 @@ bool InfoScroll()
             case PIR_STATE_MENU_INFO:
                 LCDPrintString(ONE, CENTER_ALIGN, "The state of");
                 LCDPrintString(TWO, CENTER_ALIGN, "the PIR is:");
-                ReadMemory(EepromTab[PIR_STATE].eeprom_par_value, EepromTab[PIR_STATE].eeprom_par_numReg, &EepromTab[PIR_STATE].eeprom_par_value);
-                LCDPrintString(THREE, CENTER_ALIGN, OnOff[EepromTab[PIR_STATE].eeprom_par_value]);
+                LCDPrintString(THREE, CENTER_ALIGN, ONOFFStr[StatePir]);
                 break;
             case TIME_BANDS_INFO:
                 LCDPrintString(ONE, CENTER_ALIGN, "The band is:");
@@ -639,7 +652,7 @@ bool InfoScroll()
                 LCDPrintString(ONE, CENTER_ALIGN, "Version Number:");
                 LCDPrintString(TWO, CENTER_ALIGN, VERSION_NUMBER);
                 LCDPrintString(THREE, CENTER_ALIGN, "Release Date:");
-                LCDPrintString(TWO, CENTER_ALIGN, VERSION_DATA);
+                LCDPrintString(FOUR, CENTER_ALIGN, VERSION_DATA);
                 break;
             default:
                 break;
@@ -736,6 +749,11 @@ bool ResetAll()
     }
 }
 
+bool ShowMenuTime()
+{
+	
+	
+}
 
 bool CheckYesNo()
 {

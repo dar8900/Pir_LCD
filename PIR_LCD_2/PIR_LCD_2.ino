@@ -8,6 +8,7 @@
 #include "TimeLib.h"
 #include "Band.h"
 
+#define KEYBOARD_DELAY	100
 
 FLAGS Flags;
 
@@ -51,22 +52,24 @@ short CheckButtons()
 	if(buttonUp == HIGH)
     {
 		ButtonPress = UP;
-        delay(50);
+        delay(KEYBOARD_DELAY);
     }
 	if(buttonDown == HIGH)
     {
 		ButtonPress = DOWN;
-        delay(50);
+        delay(KEYBOARD_DELAY);
     }
 	if(OkButton == HIGH)
     {
 		ButtonPress = OK_EXIT;
-        delay(50);
+        delay(KEYBOARD_DELAY);
     }
     if(buttonDown == HIGH && OkButton == HIGH)
     {
         ButtonPress = EXIT_MANUAL;
+		delay(KEYBOARD_DELAY);
     }
+	
 	return ButtonPress;
 }
 
@@ -113,7 +116,9 @@ static void InitMemory()
 		WriteMemory(NUM_REG_ADDR, 1);
 		WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, EepromTab[DELAY_AMOUNT].eeprom_par_value);
 		WriteMemory(EepromTab[PIR_STATE].eeprom_par_addr, EepromTab[PIR_STATE].eeprom_par_value);
+		WriteMemory(LIGHT_STATE_ADDR, OFF);
         WriteMemory(BAND_INVALIDATION_VALUE_ADDR, INVALID);
+		ChangeTime();
 	}
     EepromUpdate(LIGHT_STATE_ADDR, OFF);
 	return;
