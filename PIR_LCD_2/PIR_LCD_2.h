@@ -84,7 +84,8 @@ typedef enum
       PIR_ACTIVE_POS,
       MANUAL_POS,
       MESSAGE_POS,
-      NO_LED
+      NO_LED,
+	  ALL_LED
 }LED_POSITION;
 
 
@@ -93,3 +94,4 @@ void EnableWD(short Delay);
 short CheckButtons(void);
 void BlinkLed(short pin);
 void LedCtrl(LED_POSITION Position);
+void BlinkAllLed(void);

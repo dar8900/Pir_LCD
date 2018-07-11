@@ -153,9 +153,22 @@ void LedCtrl(LED_POSITION Position)
             OFF(RED_LED);
             OFF(GREEN_LED);
             break;
+		case ALL_LED:
+            ON(BLUE_LED);
+            ON(RED_LED);
+            ON(GREEN_LED);
+            break;
         default:
             break;
     }
+}
+
+void BlinkAllLed()
+{
+	LedCtrl(NO_LED);
+	delay(5);
+	LedCtrl(ALL_LED);
+	delay(5);
 }
 
 void setup()

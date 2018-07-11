@@ -470,8 +470,10 @@ bool ChangeValue()
             {
                 LCDPrintString(TWO,CENTER_ALIGN,"Value Saved!");
                 WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, ChangeDelayAmount);
-                ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg);
+                ReadMemory(NUM_REG_ADDR, 1, &numReg);
                 ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &ChangeDelayAmount);
+				BlinkAllLed();
+				LedCtrl(MESSAGE_POS);
             }
             else
             {
@@ -544,6 +546,8 @@ bool SwichState()
                 if(SwitchOnOff != OldSwitch)
                 {
                     WriteMemory(EepromTab[EepromItem].eeprom_par_addr, SwitchOnOff);
+					BlinkAllLed();
+					LedCtrl(MESSAGE_POS);
                 }
                 OkSwitch = true;
                 delay(DELAY_MESSAGE_MENU);
@@ -727,7 +731,10 @@ bool ResetAll()
         EnableWD(WDTO_2S);
         while(1)
         {
-            delay(10);
+			LedCtrl(ALL_LED);
+            delay(8);
+			LedCtrl(NO_LED);
+            delay(2);
         }
     }
     else
