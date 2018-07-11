@@ -192,6 +192,8 @@ void setup()
 	pinMode(LIGHT_SWITCH, OUTPUT);
 	pinMode(PIR_INPUT, INPUT);
 
+	delay(10);
+	BlinkAllLed();
 	delay(1000);
     LCDInit();
 	LCDNoBlink();
@@ -199,7 +201,7 @@ void setup()
 
 	InitMemory();
     BandInit();
-	delay(1000);
+	delay(400);
 	ClearLCD();
     OFF(LIGHT_SWITCH);
     Flags.Backlight = true;

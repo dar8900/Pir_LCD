@@ -479,6 +479,7 @@ bool ChangeValue()
                 WriteMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, ChangeDelayAmount);
                 ReadMemory(NUM_REG_ADDR, 1, (short*)&numReg);
                 ReadMemory(EepromTab[DELAY_AMOUNT].eeprom_par_addr, numReg, &ChangeDelayAmount);
+				BlinkAllLed();
             }
             else
             {
@@ -552,8 +553,7 @@ bool SwichState()
                 if(SwitchOnOff != OldSwitch)
                 {
                     EepromUpdate(EepromTab[EepromItem].eeprom_par_addr, SwitchOnOff);
-					for(int i = 0; i < 5; i++)
-						BlinkLed(YELLOW_LED);
+					BlinkAllLed();	
                 }
                 OkSwitch = true;
                 delay(DELAY_MESSAGE_MENU);
@@ -740,7 +740,10 @@ bool ResetAll()
         EnableWD(WDTO_2S);
         while(1)
         {
-            delay(10);
+			LedCtrl(NO_LED);
+			delay(2);
+			LedCtrl(ALL_LED);
+			delay(8);
         }
     }
     else
