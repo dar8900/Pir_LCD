@@ -26,7 +26,6 @@ const CREATE_MENU MainSetupItems[] =
   {"Change PIR state"  , SwichState 		},
   {"Show Info"         , InfoScroll         },
   {"Manual State"	   , ManualState 		},
-  {"Show Time"   	   , ShowMenuTime 		},
   {"Change Time Bands" , ChangeTimeBands    },
   {"Change Date/Time"  , ChangeTime		    },
   {"Reset Default"     , ResetAll           },
@@ -323,6 +322,7 @@ void MainSetup()
     ClearLCD();
     while(!ExitSetup)
     {
+		ShowDateTime(ONE);
         LCDPrintString(TWO, CENTER_ALIGN, MainSetupItems[MenuItem].nameMenu);
         ButtonPress = CheckButtons();
         switch(ButtonPress)
@@ -752,11 +752,6 @@ bool ResetAll()
     }
 }
 
-bool ShowMenuTime()
-{
-	
-	
-}
 
 bool CheckYesNo()
 {
